@@ -1,0 +1,173 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  KERNEL_APP_NAME: UnaWatch-CubeIDE
+  KERNEL_APP_CONF: Debug-STM32U5A5
+
+jobs:
+  # The kernel sources are out-of-tree, so .project links every file and the
+  # build can't find a new one. An unlinked .c/.cpp is never compiled, yet the
+  # build still succeeds.
+  project-links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Kernel sources are registered in .project
+        run: python3 Software/Utilities/Scripts/check_project_links.py
+
+  firmware:
+    runs-on: ubuntu-latest
+    container: xanderhendriks/stm32cubeide:16.0
+    steps:
+      - name: Install git
+        run: |
+          # security.ubuntu.com has outages that hang apt; the main archive
+          # carries the security pocket too
+          find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
+            -exec sed -i 's#security\.ubuntu\.com/ubuntu#archive.ubuntu.com/ubuntu#g' {} +
+          apt-get update && apt-get install -y git
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+
+      # actions/checkout re-fetches the tag as lightweight, and git describe
+      # can then pick another tag on the same commit
+      - name: Version from the release tag
+        if: github.ref_type == 'tag'
+        run: echo "BUILD_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          . SDK/Utilities/Scripts/build-cube/find-cube.sh
+          . SDK/Utilities/Scripts/build-cube/una-version.sh Software/App/$KERNEL_APP_NAME/
+          SDK/Utilities/Scripts/build-cube/build-cube.sh Software/App/$KERNEL_APP_NAME/
+          OUT=Software/App/$KERNEL_APP_NAME/$KERNEL_APP_CONF
+          arm-none-eabi-objcopy -O binary $OUT/UnaWatch-Kernel.elf $OUT/UnaWatch-Kernel-$BUILD_VERSION.bin
+          arm-none-eabi-objcopy -O ihex $OUT/UnaWatch-Kernel.elf $OUT/UnaWatch-Kernel-$BUILD_VERSION.hex
+          mv $OUT/UnaWatch-Kernel.elf $OUT/UnaWatch-Kernel-$BUILD_VERSION.elf
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: |
+            Software/App/${{ env.KERNEL_APP_NAME }}/${{ env.KERNEL_APP_CONF }}/*.elf
+            Software/App/${{ env.KERNEL_APP_NAME }}/${{ env.KERNEL_APP_CONF }}/*.bin
+            Software/App/${{ env.KERNEL_APP_NAME }}/${{ env.KERNEL_APP_CONF }}/*.hex
+            Exe/*.hex
+            Exe/*.ota
+            Exe/*.gld
+
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Build and run
+        run: |
+          cmake -S Tests/Host -B build-host -DCMAKE_BUILD_TYPE=Debug
+          # A bare -j runs every compile at once and the runner runs out of memory
+          cmake --build build-host -j "$(nproc)"
+          ctest --test-dir build-host --output-on-failure
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [ project-links, firmware, host-tests ]
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Download the firmware
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+
+      - name: Make release immutable
+        run: gh release edit "$TAG" --draft=false
+
+      - id: get_slack_params
+        name: Get required parameters for slack notification
+        run: |
+          RELEASE_JSON=$(gh release view "$TAG" --json body,author,createdAt,name,url)
+          DELIM="EOF_$(openssl rand -hex 16)"
+          echo "body<<$DELIM" >> $GITHUB_OUTPUT
+          echo "$RELEASE_JSON" | jq -r '.body' >> $GITHUB_OUTPUT
+          echo "$DELIM" >> $GITHUB_OUTPUT
+          echo "author=$(echo "$RELEASE_JSON" | jq -r '.author.login')" >> $GITHUB_OUTPUT
+          echo "created_at=$(echo "$RELEASE_JSON" | jq -r '.createdAt')" >> $GITHUB_OUTPUT
+          echo "name=$(echo "$RELEASE_JSON" | jq -r '.name')" >> $GITHUB_OUTPUT
+          echo "url=$(echo "$RELEASE_JSON" | jq -r '.url')" >> $GITHUB_OUTPUT
+
+      - id: prepare_slack_payload
+        name: Prepare Slack payload
+        env:
+          BODY_RAW: ${{ steps.get_slack_params.outputs.body }}
+          SLACK_NAME: ${{ steps.get_slack_params.outputs.name }}
+          SLACK_TAG: ${{ github.ref_name }}
+          SLACK_AUTHOR: ${{ steps.get_slack_params.outputs.author }}
+          SLACK_CREATED: ${{ steps.get_slack_params.outputs.created_at }}
+          SLACK_URL: ${{ steps.get_slack_params.outputs.url }}
+        run: |
+          BODY="$BODY_RAW"
+          BODY=$(echo "$BODY" | sed 's/@\([a-zA-Z0-9_-]*\)/<https:\/\/github.com\/\1|@\1>/g')
+          BODY=$(echo "$BODY" | sed 's/^## \([^$]*\)$/*\1*/')
+          BODY=$(echo "$BODY" | sed 's/^* /- /')
+          BODY=$(echo "$BODY" | sed 's/\*\*Full Changelog\*\*:/ *Full Changelog*\n/')
+          if [ ${#BODY} -gt 2700 ]; then BODY="${BODY:0:2700}"$'\n''...'; fi
+          PAYLOAD=$(jq -c -n --arg name "$SLACK_NAME" --arg tag "$SLACK_TAG" --arg body "$BODY" --arg author "$SLACK_AUTHOR" --arg created "$SLACK_CREATED" --arg url "$SLACK_URL" '{
+            text: (":rocket: *UNA Kernel*: " + $name),
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: ("-------- :rocket: *UNA Kernel* --------\n*" + $name + "* (tag: " + $tag + ")\n\n" + $body + "\n\n:bust_in_silhouette: *Author*: " + $author + "\n:date: *Created*: " + $created + "\n\n:link: *Download*: " + $url)
+                }
+              }
+            ]
+          }')
+          echo "payload<<EOF" >> $GITHUB_OUTPUT
+          echo "$PAYLOAD" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: ${{ steps.prepare_slack_payload.outputs.payload }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

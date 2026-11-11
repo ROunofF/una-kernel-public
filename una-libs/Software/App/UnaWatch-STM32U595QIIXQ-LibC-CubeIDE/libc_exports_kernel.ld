@@ -1,0 +1,7 @@
+PROVIDE(LibcIM_init = 0x0804A409);
+PROVIDE(getenv = 0x08028061);
+PROVIDE(putenv = 0x08029269);
+PROVIDE(setenv = 0x080292B9);
+PROVIDE(setlocale = 0x0802C695);
+PROVIDE(tzset = 0x0802C1D1);
+PROVIDE(unsetenv = 0x080292CD);

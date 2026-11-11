@@ -1,0 +1,16 @@
+# build
+
+*.vcxproj.user
+
+/build/
+/simulator/msvs/.vs/*
+/simulator/msvs/Visual Studio 2022
+/simulator/msvs/screenshots/*
+/config/gcc/*
+
+# GUI generated files
+/generated/*.config
+/generated/**/*.txt
+/generated/**/*.cache
+/generated/simulator/**/Makefile
+

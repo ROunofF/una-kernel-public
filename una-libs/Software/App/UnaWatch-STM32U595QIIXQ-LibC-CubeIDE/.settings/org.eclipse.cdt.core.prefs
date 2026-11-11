@@ -1,0 +1,15 @@
+eclipse.preferences.version=1
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/OUTPUT_PATH/delimiter=;
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/OUTPUT_PATH/operation=append
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/OUTPUT_PATH/value=../../../../Exe
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/PATH_SDK/delimiter=;
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/PATH_SDK/operation=replace
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/PATH_SDK/value=../../../../SDK
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/__BUILD_VERSION__/delimiter=;
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/__BUILD_VERSION__/operation=replace
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/__BUILD_VERSION__/value=0.0.3
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/__PROJECT_NAME__/delimiter=;
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/__PROJECT_NAME__/operation=append
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/__PROJECT_NAME__/value=UNA SharedLib
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/append=true
+environment/project/com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1818431443/appendContributed=true

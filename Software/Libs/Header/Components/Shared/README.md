@@ -1,0 +1,1 @@
+This directory contains types and components common to the GUI and backend.

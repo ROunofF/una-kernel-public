@@ -1,0 +1,19 @@
+# Build output
+/Exe/
+**/Debug-STM32U5A5/
+**/Release/
+.metadata
+.headless-build
+.headless-ws/
+**/__pycache__/
+*.pyc
+
+# Host tests
+build-host/
+Tests/Host/build/
+
+# Editors
+.idea/
+.vs/
+.vscode/
+compile_commands.json

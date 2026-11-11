@@ -1,0 +1,755 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="12.0">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(TouchGFXReleasePath)\framework\source\platform\driver\touch\SDL2TouchController.cpp"/>
+    <ClCompile Include="$(TouchGFXReleasePath)\framework\source\platform\hal\simulator\sdl2\HALSDL2.cpp"/>
+    <ClCompile Include="$(TouchGFXReleasePath)\framework\source\platform\hal\simulator\sdl2\HALSDL2_icon.cpp"/>
+    <ClCompile Include="$(TouchGFXReleasePath)\framework\source\platform\hal\simulator\sdl2\OSWrappers.cpp"/>
+    <ClCompile Include="$(ApplicationRoot)\simulator\main.cpp"/>
+    <ClCompile Include="$(ApplicationRoot)\generated\simulator\src\mainBase.cpp"/>
+    <ClCompile Include="..\..\..\..\ThirdParty\Nayuki\qrcodegen.c"/>
+    <ClCompile Include="..\..\gui\src\common\FrontendApplication.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\common\FrontendApplicationBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\CountdownTimer.cpp"/>
+    <ClCompile Include="..\..\gui\src\model\Model.cpp"/>
+    <ClCompile Include="..\..\generated\simulator\src\video\SoftwareMJPEGDecoder.cpp"/>
+    <ClCompile Include="..\..\gui\src\home_screen\HomePresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\home_screen\HomeView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\home_screen\HomeViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\Menu.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ToggleSwitch.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ToggleSwitchBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuItemNotSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuItemNotSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuItemSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuItemSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\Title.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\TitleBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\Buttons.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ButtonsBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\trackingmenu_screen\TrackingMenuPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\trackingmenu_screen\TrackingMenuView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\trackingmenu_screen\TrackingMenuViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\BatteryBig.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\BatteryBigBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\BatterySmall.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\BatterySmallBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ClockHome.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ClockHomeBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\SideBarBig.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\SideBarBigBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\SideBarSmall.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\SideBarSmallBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\paircode_screen\PairCodePresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\paircode_screen\PairCodeView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\paircode_screen\PairCodeViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\paired_screen\PairedPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\paired_screen\PairedView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\paired_screen\PairedViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\shutdown_screen\ShutDownPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\shutdown_screen\ShutDownView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\shutdown_screen\ShutDownViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\splash_screen\SplashPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\splash_screen\SplashView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\splash_screen\SplashViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\TitleInfo.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\TitleInfoBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\turnoff_screen\TurnOffPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\turnoff_screen\TurnOffView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\turnoff_screen\TurnOffViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\firmwareupdate_screen\FirmwareUpdatePresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\firmwareupdate_screen\FirmwareUpdateView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\firmwareupdate_screen\FirmwareUpdateViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\lowbattery_screen\LowBatteryPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\lowbattery_screen\LowBatteryView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\lowbattery_screen\LowBatteryViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\lowbattshutdown_screen\LowBattShutDownPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\lowbattshutdown_screen\LowBattShutDownView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\lowbattshutdown_screen\LowBattShutDownViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuTop.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuTopBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ProgressBar.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ProgressBarBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsfacesaved_screen\SettingsFaceSavedPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsfacesaved_screen\SettingsFaceSavedView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsfacesaved_screen\SettingsFaceSavedViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssatellitessaved_screen\SettingsSatellitesSavedPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssatellitessaved_screen\SettingsSatellitesSavedView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingssatellitessaved_screen\SettingsSatellitesSavedViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\topmenufind_screen\TopMenuFindPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\topmenufind_screen\TopMenuFindView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\topmenufind_screen\TopMenuFindViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\topmenu_screen\TopMenuPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\topmenu_screen\TopMenuView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\topmenu_screen\TopMenuViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\usb_screen\USBPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\usb_screen\USBView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\usb_screen\USBViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\WatchFace1.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\WatchFace1Base.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsdevice_screen\SettingsDevicePresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsdevice_screen\SettingsDeviceView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsdevice_screen\SettingsDeviceViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsphone1_screen\SettingsPhone1Presenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsphone1_screen\SettingsPhone1View.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsphone1_screen\SettingsPhone1ViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsphone2_screen\SettingsPhone2Presenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsphone2_screen\SettingsPhone2View.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsphone2_screen\SettingsPhone2ViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settings_screen\SettingsPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsreset_screen\SettingsResetPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsreset_screen\SettingsResetView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsreset_screen\SettingsResetViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssatellites_screen\SettingsSatellitesPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssatellites_screen\SettingsSatellitesView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingssatellites_screen\SettingsSatellitesViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssounds_screen\SettingsSoundsPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssounds_screen\SettingsSoundsView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingssounds_screen\SettingsSoundsViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsvibration_screen\SettingsVibrationPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsvibration_screen\SettingsVibrationView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsvibration_screen\SettingsVibrationViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settings_screen\SettingsView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settings_screen\SettingsViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuDevice.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuDeviceBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuDeviceItem.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuDeviceItemBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\charging_screen\ChargingPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\charging_screen\ChargingView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\charging_screen\ChargingViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\userapp_screen\UserAppPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\userapp_screen\UserAppView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\userapp_screen\UserAppViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\pairing_screen\PairingPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\pairing_screen\PairingView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\pairing_screen\PairingViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\qrcode_screen\QRCodePresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\qrcode_screen\QRCodeView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\qrcode_screen\QRCodeViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\pairingcancel_screen\PairingCancelPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\pairingcancel_screen\PairingCancelView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\pairingcancel_screen\PairingCancelViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\pairinginfo_screen\PairingInfoPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\pairinginfo_screen\PairingInfoView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\pairinginfo_screen\PairingInfoViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuSetTime.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuSetTimeBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuSetTimeItemHoursNotSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuSetTimeItemHoursNotSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuSetTimeItemHoursSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuSetTimeItemHoursSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuSetTimeItemMinutesNotSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuSetTimeItemMinutesNotSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuSetTimeItemMinutesSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuSetTimeItemMinutesSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuAlarm.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuAlarmBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuAlarmItemNotSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuAlarmItemNotSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuAlarmItemSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuAlarmItemSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ActivityBarBottom.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ActivityBarBottomBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ActivityBarTop.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ActivityBarTopBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotification_screen\PhoneNotificationPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotification_screen\PhoneNotificationView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\phonenotification_screen\PhoneNotificationViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotificationdetails_screen\PhoneNotificationDetailsPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotificationdetails_screen\PhoneNotificationDetailsView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\phonenotificationdetails_screen\PhoneNotificationDetailsViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\NotificationContent.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\NotificationContentBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuNotification.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuNotificationBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuNotificationItemNotSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuNotificationItemNotSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuNotificationItemSelected.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuNotificationItemSelectedBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotificationlist_screen\PhoneNotificationListPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotificationlist_screen\PhoneNotificationListView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\phonenotificationlist_screen\PhoneNotificationListViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotificationconfirm_screen\PhoneNotificationConfirmPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\phonenotificationconfirm_screen\PhoneNotificationConfirmView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\phonenotificationconfirm_screen\PhoneNotificationConfirmViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\glances_screen\GlancesPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\glances_screen\GlancesView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\glances_screen\GlancesViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuGlances.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuGlancesBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuGlancesCenterItem.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuGlancesCenterItemBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuGlancesCenterItemLastActivity.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuGlancesCenterItemLastActivityBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuGlancesCenterItemNotification.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuGlancesCenterItemNotificationBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\MenuGlancesItem.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\MenuGlancesItemBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\splash1_screen\Splash1Presenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\splash1_screen\Splash1View.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\splash1_screen\Splash1ViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\bletestfcc_screen\BleTestFCCPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\bletestfcc_screen\BleTestFCCView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\bletestfcc_screen\BleTestFCCViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\bletesttxfcc_screen\BleTestTxFCCPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\bletesttxfcc_screen\BleTestTxFCCView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\bletesttxfcc_screen\BleTestTxFCCViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsgnss_screen\SettingsGNSSPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsgnss_screen\SettingsGNSSView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsgnss_screen\SettingsGNSSViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsgpsassist_screen\SettingsGpsAssistPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsgpsassist_screen\SettingsGpsAssistView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsgpsassist_screen\SettingsGpsAssistViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\error_screen\ErrorPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\error_screen\ErrorView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\error_screen\ErrorViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\Battery.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\BatteryBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\OrbitMenu.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\OrbitMenuBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ScrollIndicator.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ScrollIndicatorBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssensors_screen\SettingsSensorsPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssensors_screen\SettingsSensorsView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingssensors_screen\SettingsSensorsViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\mediacontrol_screen\MediaControlPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\mediacontrol_screen\MediaControlView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\mediacontrol_screen\MediaControlViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\ScrollingText.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\ScrollingTextBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsclockformat_screen\SettingsClockFormatPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsclockformat_screen\SettingsClockFormatView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsclockformat_screen\SettingsClockFormatViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsclock_screen\SettingsClockPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsclock_screen\SettingsClockView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsclock_screen\SettingsClockViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\AppFrame.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\AppFrameBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingswatchface_screen\SettingsWatchFacePresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingswatchface_screen\SettingsWatchFaceView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingswatchface_screen\SettingsWatchFaceViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\WatchFaceChrome.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\WatchFaceChromeBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingscompass_screen\SettingsCompassPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingscompass_screen\SettingsCompassView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingscompass_screen\SettingsCompassViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\containers\CompassRose.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\containers\CompassRoseBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\appstartfailed_screen\AppStartFailedPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\appstartfailed_screen\AppStartFailedView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\appstartfailed_screen\AppStartFailedViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsbacklight_screen\SettingsBacklightPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsbacklighttimeout_screen\SettingsBacklightTimeoutPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsbacklighttimeout_screen\SettingsBacklightTimeoutView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsbacklighttimeout_screen\SettingsBacklightTimeoutViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingsbacklight_screen\SettingsBacklightView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingsbacklight_screen\SettingsBacklightViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssleepday_screen\SettingsSleepDayPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssleepday_screen\SettingsSleepDayView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingssleepday_screen\SettingsSleepDayViewBase.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssleep_screen\SettingsSleepPresenter.cpp"/>
+    <ClCompile Include="..\..\gui\src\settingssleep_screen\SettingsSleepView.cpp"/>
+    <ClCompile Include="..\..\generated\gui_generated\src\settingssleep_screen\SettingsSleepViewBase.cpp"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(ApplicationRoot)\assets\texts\texts.xml"/>
+    <None Include="$(ApplicationRoot)\config\msvs\Application.props"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\common\AbstractPartition.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\common\Meta.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\common\Partition.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\common\TouchGFXInit.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\mvp\MVPApplication.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\mvp\MVPHeap.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\mvp\Presenter.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\mvp\View.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\driver\lcd\LCD16bpp.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\driver\lcd\LCD1bpp.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\driver\lcd\LCD24bpp.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\driver\lcd\LCD2bpp.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\driver\lcd\LCD4bpp.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\driver\touch\SDL2TouchController.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\platform\hal\simulator\sdl2\HALSDL2.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Application.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Bitmap.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Callback.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\CanvasWidgetRenderer.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\Cell.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\Outline.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\Rasterizer.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\Renderer.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\RenderingBuffer.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\RGBA8.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\canvas_widget_renderer\Scanline.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Color.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\ConstFont.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\clock\AbstractClock.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\clock\AnalogClock.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\clock\DigitalClock.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\Container.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\ListLayout.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\ModalWindow.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\AbstractDirectionProgress.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\AbstractProgressIndicator.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\BoxProgress.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\CircleProgress.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\ImageProgress.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\LineProgress.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\progress_indicators\TextProgress.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\ScrollableContainer.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\SlideMenu.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\Slider.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\containers\ZoomAnimationImage.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Drawable.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\EasingEquations.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Event.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\events\ClickEvent.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\events\DragEvent.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\events\GestureEvent.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Font.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\FontManager.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\Atomic.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\BlitOp.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\BoardConfiguration.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\Buttons.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\Config.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\DMA.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\Gestures.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\GPIO.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\HAL.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\LED.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\NoDMA.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\OSWrappers.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\hal\Types.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\InternalFlashFont.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\JSMOCHelper.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\lcd\LCD.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Math3D.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\mixins\ClickListener.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\mixins\Draggable.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\mixins\FadeAnimator.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\mixins\MoveAnimator.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\mixins\PreRenderable.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\mixins\Snapper.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Screen.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\TextProvider.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Texts.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\TextureMapTypes.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\transforms\DisplayTransformation.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\transforms\TouchCalibration.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\transitions\NoTransition.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\transitions\SlideTransition.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\transitions\Transition.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\TypedText.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\UIEventListener.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Unicode.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\Utils.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\AbstractButton.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\AnimatedImage.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\AnimationTextureMapper.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\Box.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\Button.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\ButtonWithIcon.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\ButtonWithLabel.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractPainter.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractPainterBW.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractPainterGRAY2.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractPainterGRAY4.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractPainterRGB565.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractPainterRGB888.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\AbstractShape.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\Canvas.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\CanvasWidget.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\Circle.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\CWRUtil.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\Line.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterBW.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterGRAY2.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterGRAY2Bitmap.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterGRAY4.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterGRAY4Bitmap.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterRGB565.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterRGB565Bitmap.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterRGB888.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\PainterRGB888Bitmap.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\canvas\Shape.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\Image.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\Keyboard.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\PixelDataWidget.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\RadioButton.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\RadioButtonGroup.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\RepeatButton.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\ScalableImage.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\SnapshotWidget.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\TextArea.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\TextAreaWithWildcard.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\TextureMapper.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\TiledImage.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\ToggleButton.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\TouchArea.hpp"/>
+    <ClInclude Include="$(TouchGFXReleasePath)\framework\include\touchgfx\widgets\Widget.hpp"/>
+    <ClInclude Include="$(ApplicationRoot)\generated\simulator\include\simulator\mainBase.hpp"/>
+    <ClInclude Include="..\..\..\..\ThirdParty\Nayuki\qrcodegen.h"/>
+    <ClInclude Include="..\..\generated\simulator\include\simulator\video\DirectFrameBufferVideoController.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\common\FrontendApplication.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\common\FrontendApplicationBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\common\FrontendHeap.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\common\FrontendHeapBase.hpp"/>
+    <ClInclude Include="..\..\generated\simulator\include\simulator\video\MJPEGDecoder.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\common\GuiLogger.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\CountdownTimer.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\model\Model.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\model\ModelListener.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\common\SimConstants.hpp"/>
+    <ClInclude Include="..\..\generated\simulator\include\simulator\video\SoftwareMJPEGDecoder.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\common\GuiConfig.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\home_screen\HomePresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\home_screen\HomeView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\home_screen\HomeViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\Menu.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ToggleSwitch.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ToggleSwitchBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuItemNotSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuItemNotSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuItemSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuItemSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\Title.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\TitleBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\Buttons.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ButtonsBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\trackingmenu_screen\TrackingMenuPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\trackingmenu_screen\TrackingMenuView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\trackingmenu_screen\TrackingMenuViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\BatteryBig.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\BatteryBigBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\BatterySmall.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\BatterySmallBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ClockHome.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ClockHomeBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\SideBarBig.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\SideBarBigBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\SideBarSmall.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\SideBarSmallBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\paircode_screen\PairCodePresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\paircode_screen\PairCodeView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\paircode_screen\PairCodeViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\paired_screen\PairedPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\paired_screen\PairedView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\paired_screen\PairedViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\shutdown_screen\ShutDownPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\shutdown_screen\ShutDownView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\shutdown_screen\ShutDownViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\splash_screen\SplashPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\splash_screen\SplashView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\splash_screen\SplashViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\TitleInfo.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\TitleInfoBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\turnoff_screen\TurnOffPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\turnoff_screen\TurnOffView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\turnoff_screen\TurnOffViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\firmwareupdate_screen\FirmwareUpdatePresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\firmwareupdate_screen\FirmwareUpdateView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\firmwareupdate_screen\FirmwareUpdateViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\lowbattery_screen\LowBatteryPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\lowbattery_screen\LowBatteryView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\lowbattery_screen\LowBatteryViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\lowbattshutdown_screen\LowBattShutDownPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\lowbattshutdown_screen\LowBattShutDownView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\lowbattshutdown_screen\LowBattShutDownViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuTop.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuTopBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ProgressBar.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ProgressBarBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsfacesaved_screen\SettingsFaceSavedPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsfacesaved_screen\SettingsFaceSavedView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsfacesaved_screen\SettingsFaceSavedViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssatellitessaved_screen\SettingsSatellitesSavedPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssatellitessaved_screen\SettingsSatellitesSavedView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingssatellitessaved_screen\SettingsSatellitesSavedViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\topmenufind_screen\TopMenuFindPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\topmenufind_screen\TopMenuFindView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\topmenufind_screen\TopMenuFindViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\topmenu_screen\TopMenuPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\topmenu_screen\TopMenuView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\topmenu_screen\TopMenuViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\usb_screen\USBPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\usb_screen\USBView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\usb_screen\USBViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\WatchFace1.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\WatchFace1Base.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsdevice_screen\SettingsDevicePresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsdevice_screen\SettingsDeviceView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsdevice_screen\SettingsDeviceViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsphone1_screen\SettingsPhone1Presenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsphone1_screen\SettingsPhone1View.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsphone1_screen\SettingsPhone1ViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsphone2_screen\SettingsPhone2Presenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsphone2_screen\SettingsPhone2View.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsphone2_screen\SettingsPhone2ViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settings_screen\SettingsPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsreset_screen\SettingsResetPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsreset_screen\SettingsResetView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsreset_screen\SettingsResetViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssatellites_screen\SettingsSatellitesPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssatellites_screen\SettingsSatellitesView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingssatellites_screen\SettingsSatellitesViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssounds_screen\SettingsSoundsPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssounds_screen\SettingsSoundsView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingssounds_screen\SettingsSoundsViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsvibration_screen\SettingsVibrationPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsvibration_screen\SettingsVibrationView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsvibration_screen\SettingsVibrationViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settings_screen\SettingsView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settings_screen\SettingsViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuDevice.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuDeviceBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuDeviceItem.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuDeviceItemBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\charging_screen\ChargingPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\charging_screen\ChargingView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\charging_screen\ChargingViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\userapp_screen\UserAppPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\userapp_screen\UserAppView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\userapp_screen\UserAppViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\pairing_screen\PairingPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\pairing_screen\PairingView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\pairing_screen\PairingViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\qrcode_screen\QRCodePresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\qrcode_screen\QRCodeView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\qrcode_screen\QRCodeViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\pairingcancel_screen\PairingCancelPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\pairingcancel_screen\PairingCancelView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\pairingcancel_screen\PairingCancelViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\pairinginfo_screen\PairingInfoPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\pairinginfo_screen\PairingInfoView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\pairinginfo_screen\PairingInfoViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuSetTime.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuSetTimeBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuSetTimeItemHoursNotSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuSetTimeItemHoursNotSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuSetTimeItemHoursSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuSetTimeItemHoursSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuSetTimeItemMinutesNotSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuSetTimeItemMinutesNotSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuSetTimeItemMinutesSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuSetTimeItemMinutesSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuAlarm.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuAlarmBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuAlarmItemNotSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuAlarmItemNotSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuAlarmItemSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuAlarmItemSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ActivityBarBottom.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ActivityBarBottomBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ActivityBarTop.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ActivityBarTopBase.hpp"/>
+    <ClInclude Include="..\Backend.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotification_screen\PhoneNotificationPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotification_screen\PhoneNotificationView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\phonenotification_screen\PhoneNotificationViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotificationdetails_screen\PhoneNotificationDetailsPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotificationdetails_screen\PhoneNotificationDetailsView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\phonenotificationdetails_screen\PhoneNotificationDetailsViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\NotificationContent.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\NotificationContentBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuNotification.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuNotificationBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuNotificationItemNotSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuNotificationItemNotSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuNotificationItemSelected.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuNotificationItemSelectedBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotificationlist_screen\PhoneNotificationListPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotificationlist_screen\PhoneNotificationListView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\phonenotificationlist_screen\PhoneNotificationListViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotificationconfirm_screen\PhoneNotificationConfirmPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\phonenotificationconfirm_screen\PhoneNotificationConfirmView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\phonenotificationconfirm_screen\PhoneNotificationConfirmViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\glances_screen\GlancesPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\glances_screen\GlancesView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\glances_screen\GlancesViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuGlances.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuGlancesBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuGlancesCenterItem.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuGlancesCenterItemBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuGlancesCenterItemLastActivity.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuGlancesCenterItemLastActivityBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuGlancesCenterItemNotification.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuGlancesCenterItemNotificationBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\MenuGlancesItem.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\MenuGlancesItemBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\splash1_screen\Splash1Presenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\splash1_screen\Splash1View.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\splash1_screen\Splash1ViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\bletestfcc_screen\BleTestFCCPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\bletestfcc_screen\BleTestFCCView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\bletestfcc_screen\BleTestFCCViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\bletesttxfcc_screen\BleTestTxFCCPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\bletesttxfcc_screen\BleTestTxFCCView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\bletesttxfcc_screen\BleTestTxFCCViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsgnss_screen\SettingsGNSSPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsgnss_screen\SettingsGNSSView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsgnss_screen\SettingsGNSSViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsgpsassist_screen\SettingsGpsAssistPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsgpsassist_screen\SettingsGpsAssistView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsgpsassist_screen\SettingsGpsAssistViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\error_screen\ErrorPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\error_screen\ErrorView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\error_screen\ErrorViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\Battery.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\BatteryBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\OrbitMenu.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\OrbitMenuBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ScrollIndicator.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ScrollIndicatorBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssensors_screen\SettingsSensorsPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssensors_screen\SettingsSensorsView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingssensors_screen\SettingsSensorsViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\mediacontrol_screen\MediaControlPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\mediacontrol_screen\MediaControlView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\mediacontrol_screen\MediaControlViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\ScrollingText.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\ScrollingTextBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsclockformat_screen\SettingsClockFormatPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsclockformat_screen\SettingsClockFormatView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsclockformat_screen\SettingsClockFormatViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsclock_screen\SettingsClockPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsclock_screen\SettingsClockView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsclock_screen\SettingsClockViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\AppFrame.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\AppFrameBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingswatchface_screen\SettingsWatchFacePresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingswatchface_screen\SettingsWatchFaceView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingswatchface_screen\SettingsWatchFaceViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\WatchFaceChrome.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\WatchFaceChromeBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingscompass_screen\SettingsCompassPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingscompass_screen\SettingsCompassView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingscompass_screen\SettingsCompassViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\containers\CompassRose.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\containers\CompassRoseBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\appstartfailed_screen\AppStartFailedPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\appstartfailed_screen\AppStartFailedView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\appstartfailed_screen\AppStartFailedViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\topmenu_screen\TopMenuOrder.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsbacklight_screen\SettingsBacklightPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsbacklighttimeout_screen\SettingsBacklightTimeoutPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsbacklighttimeout_screen\SettingsBacklightTimeoutView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsbacklighttimeout_screen\SettingsBacklightTimeoutViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingsbacklight_screen\SettingsBacklightView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingsbacklight_screen\SettingsBacklightViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssleepday_screen\SettingsSleepDayPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssleepday_screen\SettingsSleepDayView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingssleepday_screen\SettingsSleepDayViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssleep_screen\SettingsSleepPresenter.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\settingssleep_screen\SettingsSleepView.hpp"/>
+    <ClInclude Include="..\..\generated\gui_generated\include\gui_generated\settingssleep_screen\SettingsSleepViewBase.hpp"/>
+    <ClInclude Include="..\..\gui\include\gui\common\BacklightLabels.hpp"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="$(ApplicationRoot)\generated\simulator\touchgfx.rc"/>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C47683C-0505-487F-A1FD-75B8490BF72C}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Application</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props"/>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props"/>
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform"/>
+    <Import Project="..\..\config\msvs\Application.props"/>
+    <Import Project="..\..\generated\simulator\msvs\touchgfx_sdl2.props"/>
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform"/>
+    <Import Project="..\..\config\msvs\Application.props"/>
+    <Import Project="..\..\generated\simulator\msvs\touchgfx_sdl2.props"/>
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros"/>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ApplicationRoot)\build\$(Configuration)\bin\</OutDir>
+    <IntDir>$(ApplicationRoot)\build\$(Configuration)\obj\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ApplicationRoot)\build\$(Configuration)\bin\</OutDir>
+    <IntDir>$(ApplicationRoot)\build\$(Configuration)\obj\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4355</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>../../../../../SDK/Libs/Header/;../../../../Libs/Header/;../../../../ThirdParty/Nayuki/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
+      <DisableSpecificWarnings/>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(ApplicationRoot)\generated\simulator\msvs\touchgfx_prebuild.targets"/>
+  </ImportGroup>
+</Project>

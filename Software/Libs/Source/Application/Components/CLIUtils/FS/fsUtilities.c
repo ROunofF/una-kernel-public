@@ -1,0 +1,63 @@
+#include "Components/CLIUtils/FS/fsUtilities.h"
+
+#include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <inttypes.h>
+
+////////////////////////////////////////////////////////////////////////////////
+//// Data types
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//// Data types
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//// Private code
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//// Public code
+////////////////////////////////////////////////////////////////////////////////
+
+void fsUtilities_UI32toString(uint32_t value, char* string16)
+{
+    sprintf(string16, "%15" PRIu32 , value);
+
+    uint32_t idxTo;
+    uint32_t idxFrom;
+
+    idxTo   = 2;
+    idxFrom = 3;
+    for (uint32_t idx = 0; idx < 9; idx++) {
+        string16[idxTo] = string16[idxFrom];
+
+        idxFrom++;
+        idxTo++;
+    }
+
+    idxTo   = 1;
+    idxFrom = 2;
+    for (uint32_t idx = 0; idx < 6; idx++) {
+        string16[idxTo] = string16[idxFrom];
+
+        idxFrom++;
+        idxTo++;
+    }
+
+    idxTo   = 0;
+    idxFrom = 1;
+    for (uint32_t idx = 0; idx < 3; idx++) {
+        string16[idxTo] = string16[idxFrom];
+
+        idxFrom++;
+        idxTo++;
+    }
+
+    string16[3]  = ' ';
+    string16[7]  = ' ';
+    string16[11] = ' ';
+}
