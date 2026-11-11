@@ -122,6 +122,18 @@ void Backend::thread()
     ErrorMonitor::GetInstance().attachStatusCallback(this);
     UsbDevice::GetInstance().attachCallback(this);
 
+    // main() starts USB before this thread runs. With the cable already in
+    // (e.g. after a reset from the USB CLI) a host can configure the device
+    // before the line above, and that onHostConfigured() went to no one: the
+    // volume never opened until the cable was replugged. Catch up on it here.
+    // Only queued, so it is handled after the apps below have started, as on
+    // a normal plug-in; if the notification also arrives, MsdOpen's
+    // mMsdOpen check drops the second one.
+    if (UsbDevice::GetInstance().isHostConfigured()) {
+        LOG_INFO("USB host configured the device before Backend started\n");
+        onHostConfigured();
+    }
+
     ComponentFactory &factory = ComponentFactory::GetInstance();
 
     minuteTimCallback(nullptr);    // Start timer to update minutes

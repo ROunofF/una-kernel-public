@@ -143,6 +143,14 @@ public:
     }
 
     /**
+     * @brief   Check if a host has configured the device while Mass Storage
+     *          is off: the state onHostConfigured() reports. Lets an observer
+     *          that attaches late catch up on a notification it missed.
+     * @retval  true if configured by a host with Mass Storage off.
+     */
+    bool isHostConfigured();
+
+    /**
      * @brief   Get last detected port type from BCD.
      * @retval  DriverUsb_PortType_t value.
      */

@@ -302,6 +302,19 @@ bool UsbDevice::disable()
     return true;
 }
 
+bool UsbDevice::isHostConfigured()
+{
+    if (!lock()) {
+        return false;
+    }
+
+    const bool configured = mIsOn && !mIsMscEnabled &&
+            hUsbDevice.dev_state == USBD_STATE_CONFIGURED;
+
+    unlock();
+    return configured;
+}
+
 /* --------------------------------------------------------------------------
  * Private
  * -------------------------------------------------------------------------- */
