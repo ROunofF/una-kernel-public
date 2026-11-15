@@ -46,5 +46,8 @@ ifeq ($(OS),Windows_NT)
 	@mkdir -p "$(application_path)/build" && echo '$(user_cflags) -Og' > "$(application_path)/$(user_cflags_file)"
 endif
 	@$(MAKE) -r -f generated/simulator/gcc/Makefile -s $(MFLAGS) $(extra_make_vars) $@ -C "$(application_path)"
+	@# UNA Watch housings for SDK/Simulator/WatchHAL.hpp (F4 cycles them)
+	@skins="$(application_path)/../../../SDK/Utilities/Simulator/Skins"; \
+	if [ "$@" = all ] && [ -d "$$skins" ]; then cp "$$skins"/landscape_*.png "$(application_path)/build/bin/"; fi
 endif
 
