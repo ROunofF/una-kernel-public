@@ -12,5 +12,4 @@
 /generated/*.config
 /generated/**/*.txt
 /generated/**/*.cache
-/generated/simulator/**/Makefile
 
