@@ -94,9 +94,90 @@ jobs:
           cmake --build build-host -j "$(nproc)"
           ctest --test-dir build-host --output-on-failure
 
+  # What TouchGFX Designer's "Run Simulator" runs: simulator/gcc/Makefile with
+  # 32-bit MinGW gcc and -Werror. The MSVS project is not built here.
+  simulator:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      # Designer runs textconvert with its own Ruby 3.0; Ruby 3.2 removed the
+      # File.exists? it calls
+      - name: Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+
+      # The gems Designer's Ruby ships with (TouchGFX/4.26.1/env/MinGW/msys/1.0/Ruby30-x64)
+      - name: Ruby gems
+        shell: pwsh
+        run: gem install --no-document nokogiri:1.12.5 roo:2.8.3 rubyXL:3.4.18
+
+      # The gcc TouchGFX Designer 4.26.1 ships (TouchGFX/4.26.1/env/MinGW):
+      # 32-bit, as libtouchgfx is (touchgfx/lib/win/mingw32). A newer gcc
+      # raises warnings that -Werror turns into errors.
+      - name: MinGW gcc 13.2
+        shell: pwsh
+        env:
+          MINGW_URL: https://github.com/niXman/mingw-builds-binaries/releases/download/13.2.0-rt_v11-rev1/i686-13.2.0-release-win32-dwarf-msvcrt-rt_v11-rev1.7z
+          MINGW_SHA256: 7184ebadd550bfa34b5060f8c3c8ccaa7427d7b838e52aaacc3b4f31a037d284
+        run: |
+          $archive = "$env:RUNNER_TEMP\mingw32.7z"
+          Invoke-WebRequest $env:MINGW_URL -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne $env:MINGW_SHA256) { throw "MinGW archive checksum mismatch" }
+          # By full path: setup-ruby's MSYS2 puts a 7z shell script first on PATH
+          & "$env:ProgramFiles\7-Zip\7z.exe" x -y -bd "-o$env:RUNNER_TEMP" $archive | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "7z failed" }
+          "$env:RUNNER_TEMP\mingw32\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      # make and a POSIX shell for the Makefile. setup-ruby already unpacked
+      # its own MSYS2 into setup-msys2's default location, so this uses the
+      # runner's preinstalled one instead (release: false).
+      - name: MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          msystem: MSYS
+          path-type: inherit
+          install: make
+
+      - name: Build
+        working-directory: Software/App/TouchGFX-GUI
+        run: |
+          # Designer writes config/gcc/app.mk (gitignored); USE_BPP matches
+          # the project's 8-bit colour depth
+          mkdir -p config/gcc
+          printf 'touchgfx_path := touchgfx\nuser_cflags := -DUSE_BPP=8\n' > config/gcc/app.mk
+          which gcc && gcc --version | head -1
+          ruby --version
+          make -f simulator/gcc/Makefile -j"$(nproc)"
+          test -f build/bin/simulator.exe
+
+      # The build regenerates generated/ from assets/ with Designer's
+      # converters. Any difference means assets/ changed without the
+      # regenerated code being committed (TouchGFX Designer: Generate Code).
+      - name: Generated code is up to date
+        working-directory: Software/App/TouchGFX-GUI
+        run: |
+          changes=$(git status --porcelain -- generated)
+          if [ -n "$changes" ]; then
+            echo "::error::generated/ is out of date with assets/. Run Generate Code in TouchGFX Designer and commit the result."
+            echo "$changes"
+            git diff --stat -- generated
+            exit 1
+          fi
+
   release:
     runs-on: ubuntu-latest
-    needs: [ project-links, firmware, host-tests ]
+    needs: [ project-links, firmware, host-tests, simulator ]
     if: github.ref_type == 'tag'
     permissions:
       contents: write
