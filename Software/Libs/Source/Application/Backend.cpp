@@ -27,6 +27,7 @@
 #include "SettingsManager.hpp"
 #include "SettingsLocalManager.hpp"
 #include "SettingsDebugManager.hpp"
+#include "Pmic.hpp"
 #include "SettingsAccessories.hpp"
 #include "SDK/Messages/AccessoryMessages.hpp"
 #include "App/Manager.hpp"
@@ -120,15 +121,32 @@ void Backend::thread()
 
     HWButtons::GetInstance().attachCallback(this);
     ErrorMonitor::GetInstance().attachStatusCallback(this);
+
+    // Restarted by software with the cable in (a `reset` from the USB CLI, a
+    // kernel install): the drive stays closed unless
+    // usbCfg.reopenAfterReset, and the watch comes up usable on the cable.
+    // Only a software reset: a power-on with the cable in (a flat watch
+    // plugged into a computer) or a watchdog restart behaves like a plug-in
+    // and opens the drive, as without this hold. Held, rather than skipping
+    // one event, so a host that configures the device late, or twice, is
+    // covered too. Set before attaching to UsbDevice, so no notification can
+    // get in first; cleared by an unplug or `usb drive on`.
+    if (Driver::System::GetResetReason() == Driver::System::ResetReason::SOFTWARE &&
+            Pmic::GetInstance().isUsbDetected() &&
+            !Settings::DebugManager::GetInstance().getSettings().usbCfg.reopenAfterReset) {
+        LOG_INFO("USB cable in after a software reset; drive held closed\n");
+        mMsdHeld = true;
+    }
+
     UsbDevice::GetInstance().attachCallback(this);
 
     // main() starts USB before this thread runs. With the cable already in
-    // (e.g. after a reset from the USB CLI) a host can configure the device
-    // before the line above, and that onHostConfigured() went to no one: the
-    // volume never opened until the cable was replugged. Catch up on it here.
-    // Only queued, so it is handled after the apps below have started, as on
-    // a normal plug-in; if the notification also arrives, MsdOpen's
-    // mMsdOpen check drops the second one.
+    // a host can configure the device before the line above, and that
+    // onHostConfigured() went to no one: the volume never opened until the
+    // cable was replugged. Catch up on it here. Only queued, so it is
+    // handled after the apps below have started, as on a normal plug-in; if
+    // the notification also arrives, MsdOpen's mMsdOpen check drops the
+    // second one. The handler drops it while the drive is held (above).
     if (UsbDevice::GetInstance().isHostConfigured()) {
         LOG_INFO("USB host configured the device before Backend started\n");
         onHostConfigured();
@@ -166,6 +184,16 @@ void Backend::thread()
 
     // Power
     Power::GetInstance().attachStatusCallback(this);
+
+    // From here onUsbDetected(false) clears the boot hold on an unplug (see
+    // there). An unplug before this went to no one if BCD had found no port,
+    // and the hold would outlive the cable: the next plug-in would not open
+    // the drive. Read the cable again now that both callbacks are wired up.
+    if (mMsdHeld && !Pmic::GetInstance().isUsbDetected()) {
+        LOG_INFO("USB cable gone during startup; hold cleared\n");
+        mMsdHeld = false;
+    }
+
     sendEventToGui(B2GEvent::BatteryLevel{ Power::GetInstance().getBatteryLevel()});
     sendEventToGui(B2GEvent::BatteryCharge{ Power::GetInstance().isCharging()});
     sendEventToGui(B2GEvent::ChargingBlocked{ Power::GetInstance().isChargingInhibited()});
@@ -1514,6 +1542,14 @@ void Backend::guiHandler(const G2BEvent::MsdOpen &evt)
         return;
     }
 
+    // Held after `usb drive off` (closing the drive re-enumerates the device,
+    // and the host configuring it again would otherwise reopen it straight
+    // away) and after a software reset with the cable in (see thread()).
+    if (mMsdHeld) {
+        LOG_INFO("MSD held closed\n");
+        return;
+    }
+
     // A host that resets the bus and configures the device again before this
     // has run reports itself a second time; reopening would drop the volume
     // and re-enumerate it once more.
@@ -1565,8 +1601,12 @@ void Backend::guiHandler(const G2BEvent::MsdClose &evt)
 
     OS::Delay(100); // TOTO: Fix App manager
 
-    // At this point, USB is disabled, so reinit is a light
-    UsbDevice::GetInstance().reinit(false, FLASH_DISK_USR);
+    // After an unplug USB is disabled, so reinit is a light one. After
+    // `usb drive off` the drive was taken from the host already; doing it
+    // again would re-enumerate the device a second time.
+    if (UsbDevice::GetInstance().isMscEnabled()) {
+        UsbDevice::GetInstance().reinit(false, FLASH_DISK_USR);
+    }
 
     mMsdOpen = false;
     sendEventToGui(B2GEvent::MsdState{false});
@@ -1982,6 +2022,13 @@ void Backend::onChargingInhibited(bool state)
 
 void Backend::onUsbDetected(bool state)
 {
+    // The cable is out, so a new plug-in opens the drive again. Here as well
+    // as in onDisconnect(): UsbDevice skips that one when BCD found no port
+    // at plug-in, and this follows VBUS alone.
+    if (!state) {
+        mMsdHeld = false;
+    }
+
     if (state && ErrorMonitor::GetInstance().isSet(SystemError::CABLE_CONNECTION)) {
         return;
     }
@@ -1991,6 +2038,18 @@ void Backend::onUsbDetected(bool state)
     }
 
     sendEventToGui(B2GEvent::UsbConnect{state});
+}
+
+void Backend::onUsbDam(bool active)
+{
+    // A debug accessory (DAM) session is hidden from the system, so taking
+    // it out sends no onUsbDetected(false). The boot hold, set from the raw
+    // cable state, would then outlive it and keep the next computer from
+    // getting the drive. DAM going away clears it instead; Power reports
+    // that also for a DAM session a fault kept from asserting.
+    if (!active) {
+        mMsdHeld = false;
+    }
 }
 
 // UsbPortMonitor
@@ -2004,6 +2063,96 @@ void Backend::onHostConfigured()
 }
 
 void Backend::onDisconnect()
+{
+    // A new plug-in opens the drive again.
+    mMsdHeld = false;
+
+    // The cable is out, so the host can no longer reach the volume.
+    reloadSettingsAfterMsd();
+
+    // Last, because the handler brings the apps back and runs on another
+    // thread: posting it before the reload above would race it, and the face
+    // would be picked by whatever the settings held before the volume was
+    // edited.
+    sendEventToBackend(G2BEvent::MsdClose{});
+}
+
+bool Backend::openMsdByHand()
+{
+    mMsdHeld = false;
+    return sendEventToBackend(G2BEvent::MsdOpen{true});
+}
+
+bool Backend::closeMsdByHand()
+{
+    // Before the close: closing re-enumerates the device, and the host
+    // configuring it again must find the drive held.
+    mMsdHeld = true;
+    return sendEventToBackend(G2BEvent::MsdCloseByHand{});
+}
+
+bool Backend::setReopenAfterReset(bool on)
+{
+    // One request at a time, so the result read back is this request's.
+    ReopenResult last = mReopenResult;
+    if (last == ReopenResult::Pending ||
+            !mReopenResult.compare_exchange_strong(last, ReopenResult::Pending)) {
+        return false;
+    }
+    if (!sendEventToBackend(G2BEvent::UsbReopenSet{on})) {
+        mReopenResult = ReopenResult::SaveFailed;
+        return false;
+    }
+    return true;
+}
+
+void Backend::guiHandler(const G2BEvent::MsdCloseByHand &evt)
+{
+    if (!mMsdOpen) {
+        return;
+    }
+
+    LOG_INFO("MSD closing by hand\n");
+
+    // Take the drive from the host first, as pulling the cable does, so the
+    // reload and the apps below cannot write the volume while the host still
+    // has it. The host configuring the device again finds mMsdHeld set.
+    UsbDevice::GetInstance().reinit(false, FLASH_DISK_USR);
+
+    reloadSettingsAfterMsd();
+
+    // Same thread, so in order after the reload.
+    guiHandler(G2BEvent::MsdClose{});
+}
+
+void Backend::guiHandler(const G2BEvent::UsbReopenSet &evt)
+{
+    // The settings file is on the volume the host owns while the drive is
+    // open. Checked here, on the thread that opens the drive, so an open
+    // cannot start while this writes.
+    if (mMsdOpen) {
+        LOG_WARNING("usbCfg.reopenAfterReset not saved: the drive is open\n");
+        mReopenResult = ReopenResult::DriveOpen;
+        return;
+    }
+
+    // One locked read-modify-write that updates the cached copy only once the
+    // file is written: on a failed write or a lock timeout, `usb` and the next
+    // reset both still see the old value, and the other debug settings are
+    // left as they are.
+    const bool on = evt.on;
+    if (Settings::DebugManager::GetInstance().updateSettings(
+            [on](WatchSettingsDebug &settings) {
+                settings.usbCfg.reopenAfterReset = on;
+            })) {
+        mReopenResult = ReopenResult::Saved;
+    } else {
+        LOG_ERROR("usbCfg.reopenAfterReset not saved\n");
+        mReopenResult = ReopenResult::SaveFailed;
+    }
+}
+
+void Backend::reloadSettingsAfterMsd()
 {
     // Update settings
     Settings::Manager &sm = Settings::Manager::GetInstance();
@@ -2030,12 +2179,6 @@ void Backend::onDisconnect()
 
     WatchSettingsLocal settingsLocal = slm.getSettings();
     sendEventToGui(B2GEvent::SettingsLocal{settingsLocal});
-
-    // Last, because the handler brings the apps back and runs on another
-    // thread: posting it before the reload above would race it, and the face
-    // would be picked by whatever the settings held before the volume was
-    // edited.
-    sendEventToBackend(G2BEvent::MsdClose{});
 }
 
 void Backend::onSystemErrorDisplay(SystemError code)

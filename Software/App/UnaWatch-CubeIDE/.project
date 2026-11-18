@@ -4149,6 +4149,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Application/Components/CLIUtils/UtilAppStart.cpp</locationURI>
 		</link>
 		<link>
+			<name>Libs/Source/Application/Components/CLIUtils/UtilUsb.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Application/Components/CLIUtils/UtilUsb.cpp</locationURI>
+		</link>
+		<link>
 			<name>Libs/Source/Application/Components/CLIUtils/UtilReset.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Application/Components/CLIUtils/UtilReset.cpp</locationURI>

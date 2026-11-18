@@ -151,6 +151,15 @@ public:
     bool isHostConfigured();
 
     /**
+     * @brief   Check if Mass Storage is part of the device's configuration.
+     * @retval  true if the host is (or will be) offered the drive.
+     */
+    bool isMscEnabled()
+    {
+        return mIsMscEnabled;
+    }
+
+    /**
      * @brief   Get last detected port type from BCD.
      * @retval  DriverUsb_PortType_t value.
      */

@@ -191,11 +191,18 @@ add_executable(una-host-tests
     kernel/SensorDataQueue_test.cpp
     kernel/SensorListener_test.cpp
     kernel/SessionFiles_test.cpp
+    kernel/SettingsManagerBase_test.cpp
     kernel/SleepSchedule_test.cpp
     kernel/SourceStepTrack_test.cpp
     kernel/SourceTick_test.cpp
     kernel/VariantAlias_test.cpp
     kernel/WordMove_test.cpp
+)
+
+# SettingsManagerBase_test.cpp writes settings to an in-memory volume: its
+# File.hpp is a fake of the FatFs-backed one, for that source file only.
+set_source_files_properties(kernel/SettingsManagerBase_test.cpp PROPERTIES
+    INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/include/FakeFs"
 )
 
 # AppSurfaceInfo_test.cpp runs a writer thread against a reader. GoogleTest

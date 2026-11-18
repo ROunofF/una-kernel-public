@@ -26,6 +26,7 @@
 #include "Components/CLIUtils/UtilFormat.hpp"
 #include "Components/CLIUtils/UtilUsbMsd.hpp"
 #include "Components/CLIUtils/UtilAppStart.hpp"
+#include "Components/CLIUtils/UtilUsb.hpp"
 #include "Components/CLIUtils/FS/utilFS.hpp"
 
 #include "SwTimer.hpp"
@@ -189,6 +190,10 @@ void InstanceCLI::CreateUtilsSet(bool workMode)
         // over USB, where the charging screen owns the display). Work-mode
         // only -- it posts to the Backend, which doesn't run in test mode.
         CLIManager_addHiddenCommand(&sMgr, Components::CliUtils::UtilAppStart::getInstance().getCommands());
+
+        // The USB drive: open/close it with the cable in, and whether it
+        // opens by itself. Work mode only, as it posts to the Backend.
+        CLIManager_addCommand(&sMgr, Components::CliUtils::UtilUsb::getInstance().getCommands());
 
         // Hidden bench tool: fit the magnetometer's hard- and soft-iron
         // correction and keep it. Work mode only, and not by preference - test

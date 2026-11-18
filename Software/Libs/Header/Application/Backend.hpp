@@ -95,6 +95,49 @@ public:
 
     void run();
 
+    /// The USB drive is open to a computer. Any thread; a snapshot.
+    bool isMsdOpen() const { return mMsdOpen; }
+
+    /// The drive is held closed (closeMsdByHand(), or a software reset with
+    /// the cable in) until the cable is unplugged or openMsdByHand() is
+    /// called.
+    bool isMsdHeld() const { return mMsdHeld; }
+
+    /**
+     * @brief   Open the USB drive now, as a plug-in does, also after
+     *          closeMsdByHand(). For the `usb drive on` CLI command.
+     * @retval  true if the request was queued.
+     */
+    bool openMsdByHand();
+
+    /**
+     * @brief   Close the USB drive without unplugging: what an unplug does
+     *          (reload the settings, bring the apps back), and the drive stays
+     *          closed until the cable is unplugged or openMsdByHand() is
+     *          called. For the `usb drive off` CLI command.
+     * @retval  true if the request was queued.
+     */
+    bool closeMsdByHand();
+
+    /**
+     * @brief   Save usbCfg.reopenAfterReset, unless the drive is open by then.
+     *          For the `usb reopen on|off` CLI command. The Backend thread
+     *          saves it; reopenResult() then says how that went. One request
+     *          at a time.
+     * @retval  true if the request was queued; false if the queue is full or
+     *          a previous request is still pending.
+     */
+    bool setReopenAfterReset(bool on);
+
+    /// Outcome of the last setReopenAfterReset().
+    enum class ReopenResult : uint8_t {
+        Pending,    ///< Queued, not handled yet.
+        Saved,
+        DriveOpen,  ///< Refused: the drive was open by the time it ran.
+        SaveFailed, ///< The settings file was not written.
+    };
+    ReopenResult reopenResult() const { return mReopenResult; }
+
 private:
     Backend();
 
@@ -346,11 +389,28 @@ private:
     std::atomic<bool> mAppsIdlePending {false};
 
     /// Mass storage opened and not yet closed. Set and cleared on the Backend
-    /// thread only, by the MsdOpen and MsdClose handlers.
-    bool mMsdOpen = false;
+    /// thread only, by the MsdOpen and MsdClose handlers; atomic so the CLI
+    /// can read it.
+    std::atomic<bool> mMsdOpen {false};
+
+    /// Drive held closed: after closeMsdByHand(), as the host configuring
+    /// the device again (which closing it causes) must not reopen it; and
+    /// after a software reset with the cable in, unless
+    /// usbCfg.reopenAfterReset (a power-on with the cable in is not held).
+    /// Cleared by an unplug and by openMsdByHand().
+    std::atomic<bool> mMsdHeld {false};
+
+    /// Set by the UsbReopenSet handler, read by the CLI thread.
+    std::atomic<ReopenResult> mReopenResult {ReopenResult::Saved};
+
+    /// Reload the settings the host may have edited over the drive. Only once
+    /// the host can no longer reach the volume.
+    void reloadSettingsAfterMsd();
 
     void guiHandler(const G2BEvent::MsdOpen &evt);
     void guiHandler(const G2BEvent::MsdClose &evt);
+    void guiHandler(const G2BEvent::MsdCloseByHand &evt);
+    void guiHandler(const G2BEvent::UsbReopenSet &evt);
     void guiHandler(const G2BEvent::ScreenFrameRate &evt);
     void guiHandler(const G2BEvent::HomeScreenShown &evt);
     // Internal: carries a watch face stopping from the thread it was running
@@ -425,6 +485,7 @@ private:
      virtual void onCharging(bool state) override;
      virtual void onChargingInhibited(bool state) override;
      virtual void onUsbDetected(bool state) override;
+     virtual void onUsbDam(bool active) override;
      virtual void onBatteryLevelChanged(float level) override;
      virtual void onBatteryLow() override;
 

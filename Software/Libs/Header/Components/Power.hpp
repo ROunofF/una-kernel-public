@@ -68,6 +68,9 @@ public:
          *          state, but unlike onUsbDetected/onCharging/onUsbError it
          *          stays truthful while DAM hides USB from the system, so
          *          observers may act on it (e.g. to gate kernel logging).
+         *          'false' also comes when a DAM cable is removed that a
+         *          fault kept from asserting, as nothing else reports the
+         *          end of that hidden session.
          * @param   active: 'true' if DAM is active, 'false' otherwise.
          */
         virtual void onUsbDam(bool active) {}

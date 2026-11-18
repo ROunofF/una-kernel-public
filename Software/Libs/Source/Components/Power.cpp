@@ -218,6 +218,14 @@ void Power::pmicHandler()
                 // first and the line is not swallowed.
                 mObserver.notify(&StatusCallback::onUsbDam, false);
                 LOG_INFO("USB DAM deasserted (cable removed)\n");
+            } else if (mDamLatched) {
+                // A DAM session the fault gate kept from asserting (or
+                // deasserted before the unplug, which repeats a 'false'):
+                // USB was hidden, so no onUsbDetected(false) follows either.
+                // Report its end all the same, so observers can close a
+                // state they opened for the cable (Backend's USB drive
+                // hold).
+                mObserver.notify(&StatusCallback::onUsbDam, false);
             }
             mDamLatched = false;
             mUsbFault   = false;

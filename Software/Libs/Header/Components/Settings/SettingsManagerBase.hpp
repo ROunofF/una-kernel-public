@@ -71,6 +71,28 @@ public:
         return status;
     }
 
+    // Change some settings and save them, under one lock: `change` edits a
+    // copy of the cached settings, the copy is written, and the cache takes it
+    // only once the file is written. On a failed write or a lock timeout
+    // nothing changes, so getSettings() keeps matching what the next load()
+    // reads. Unlike getSettings() + saveSettings(), a lock timeout cannot turn
+    // the copy into defaults, and no load() can slip in between.
+    template<typename Change>
+    bool updateSettings(Change change) {
+        bool status = false;
+        if (mMutex.lock(skMutexTimeout)) {
+            SettingsType settings = mSettings;
+            change(settings);
+            const size_t len = create(settings, mBuffer, sizeof(mBuffer));
+            if (len > 0 && write(mBuffer, len)) {
+                mSettings = settings;
+                status = true;
+            }
+            mMutex.release();
+        }
+        return status;
+    }
+
     // Refresh the ".bak" backup from the CURRENT on-disk primary, verbatim.
     //
     // The global settings file is written almost exclusively by paths that

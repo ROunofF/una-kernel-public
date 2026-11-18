@@ -77,6 +77,11 @@ struct WatchSettingsDebug {
         bool     logToBLE = false; // Stream data from fusion to BLE. Works only if bleCfg.useNUS = true
     } fusionCfg;
 
+    // USB
+    struct {
+        bool     reopenAfterReset = false; // Open the USB drive again after a software reset with the cable in (a plug-in or a power-on always opens it)
+    } usbCfg;
+
     /**
      * @brief Equality operator to compare two local settings configurations.
      * @param other The other WatchSettingsDebug object to compare.
@@ -111,7 +116,9 @@ struct WatchSettingsDebug {
                 logCfg.logInDam == other.logCfg.logInDam &&
 
                 fusionCfg.logToCSV == other.fusionCfg.logToCSV &&
-                fusionCfg.logToBLE == other.fusionCfg.logToBLE
+                fusionCfg.logToBLE == other.fusionCfg.logToBLE &&
+
+                usbCfg.reopenAfterReset == other.usbCfg.reopenAfterReset
         );
     }
 

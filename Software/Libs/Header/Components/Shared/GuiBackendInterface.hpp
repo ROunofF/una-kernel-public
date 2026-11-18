@@ -201,6 +201,15 @@ struct MsdOpen {
     bool enable;
 };
 struct MsdClose {};
+/// `usb drive off` (USB CLI): close the drive with the cable in. Handled on
+/// the Backend thread, which takes the drive from the host before the
+/// firmware touches the filesystem.
+struct MsdCloseByHand {};
+/// `usb reopen on|off` (USB CLI): save usbCfg.reopenAfterReset. On the
+/// Backend thread, so it cannot overlap the drive being opened.
+struct UsbReopenSet {
+    bool on;
+};
 
 /**
  * @brief How often the screen now up needs a frame for its own sake.
@@ -326,6 +335,8 @@ using Data = std::variant<
 
         MsdOpen,
         MsdClose,
+        MsdCloseByHand,
+        UsbReopenSet,
         ScreenFrameRate,
         HomeScreenShown,
         PlayError,

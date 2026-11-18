@@ -76,6 +76,8 @@ bool DebugManager::parse(const char*         buff,
     r.get("fusionCfg.logToCSV", settings.fusionCfg.logToCSV);
     r.get("fusionCfg.logToBLE", settings.fusionCfg.logToBLE);
 
+    r.get("usbCfg.reopenAfterReset", settings.usbCfg.reopenAfterReset);
+
     return true;
 }
 
@@ -141,6 +143,12 @@ size_t DebugManager::create(const WatchSettingsDebug& settings,
 
         w.add("logToCSV", settings.fusionCfg.logToCSV);
         w.add("logToBLE", settings.fusionCfg.logToBLE);
+    }
+
+    {
+        SDK::JsonStreamWriter::KeyedMapScope m{w, "usbCfg"};
+
+        w.add("reopenAfterReset", settings.usbCfg.reopenAfterReset);
     }
 
     w.endMap();
