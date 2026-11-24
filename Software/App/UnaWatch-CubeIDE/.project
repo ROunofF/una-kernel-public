@@ -3204,6 +3204,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Components/Time/TimeUtils.c</locationURI>
 		</link>
 		<link>
+			<name>Libs/Source/Components/USB/MtpResponder.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Components/USB/MtpResponder.cpp</locationURI>
+		</link>
+		<link>
 			<name>Libs/Source/Components/USB/UsbDevice.cpp</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Components/USB/UsbDevice.cpp</locationURI>
@@ -3227,6 +3232,11 @@
 			<name>Libs/Source/Components/USB/usbd_desc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Components/USB/usbd_desc.c</locationURI>
+		</link>
+		<link>
+			<name>Libs/Source/Components/USB/usbd_mtp.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Libs/Source/Components/USB/usbd_mtp.c</locationURI>
 		</link>
 		<link>
 			<name>Libs/Source/Components/USB/usbd_msc_if.c</name>

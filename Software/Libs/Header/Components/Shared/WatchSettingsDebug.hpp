@@ -80,6 +80,7 @@ struct WatchSettingsDebug {
     // USB
     struct {
         bool     reopenAfterReset = false; // Open the USB drive again after a software reset with the cable in (a plug-in or a power-on always opens it)
+        bool     mtp = false;              // On plug-in, keep the USB drive closed and serve the files over MTP instead, so the watch keeps running (`usb drive on` still opens the drive)
     } usbCfg;
 
     /**
@@ -118,7 +119,8 @@ struct WatchSettingsDebug {
                 fusionCfg.logToCSV == other.fusionCfg.logToCSV &&
                 fusionCfg.logToBLE == other.fusionCfg.logToBLE &&
 
-                usbCfg.reopenAfterReset == other.usbCfg.reopenAfterReset
+                usbCfg.reopenAfterReset == other.usbCfg.reopenAfterReset &&
+                usbCfg.mtp == other.usbCfg.mtp
         );
     }
 

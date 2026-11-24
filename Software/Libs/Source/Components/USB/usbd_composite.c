@@ -14,6 +14,10 @@ void USBD_COMPOSITE_EnableMSC(bool enable)
 {
     sUSBD_MSC_Enable = enable;
 }
+bool USBD_COMPOSITE_IsMSCEnabled(void)
+{
+    return sUSBD_MSC_Enable;
+}
 // Called from USBD_COMPOSITE_Init, i.e. when the host sends SET_CONFIGURATION.
 // Runs in the USB interrupt.
 static void (*sUSBD_ConfiguredCb)(void);
@@ -22,6 +26,20 @@ void USBD_COMPOSITE_SetConfiguredCallback(void (*cb)(void))
     sUSBD_ConfiguredCb = cb;
 }
 static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void);
+
+#include "main.h"
+/* MTP rides along with the serial port whenever Mass Storage is off: the
+   watch owns its file system then, so the host can browse it through MTP
+   while the watch keeps running and writing. */
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+#define USBD_USE_MTP 1
+#include "usbd_mtp.h"
+#else
+#define USBD_USE_MTP 0
+#endif
+#if (USBD_USE_MTP == 1)
+#define MTP_ACTIVE() (!sUSBD_MSC_Enable)
+#endif
 
 /**
   ******************************************************************************
@@ -196,6 +214,9 @@ uint8_t USBD_Track_String_Index = (USBD_IDX_INTERFACE_STR + 1);
 typedef struct USBD_COMPOSITE_CFG_DESC_VCP_ONLY_t
 {
   uint8_t CONFIG_DESC[USB_CONF_DESC_SIZE];
+#if (USBD_USE_MTP == 1)
+  uint8_t USBD_MTP_DESC[USB_MTP_CONFIG_DESC_SIZ - 0x09];
+#endif
 #if (USBD_USE_CDC_ACM == 1)
   uint8_t USBD_CDC_ACM_DESC[USB_CDC_CONFIG_DESC_SIZ - 0x09];
 #endif
@@ -274,6 +295,11 @@ static uint8_t USBD_COMPOSITE_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
       USBD_MSC.Init(pdev, cfgidx);
   }
 #endif
+#if (USBD_USE_MTP == 1)
+  if (MTP_ACTIVE()) {
+      USBD_MTP.Init(pdev, cfgidx);
+  }
+#endif
 #if (USBD_USE_DFU == 1)
   USBD_DFU.Init(pdev, cfgidx);
 #endif
@@ -327,6 +353,11 @@ static uint8_t USBD_COMPOSITE_DeInit(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 #if (USBD_USE_MSC == 1)
   if (sUSBD_MSC_Enable) {
       USBD_MSC.DeInit(pdev, cfgidx);
+  }
+#endif
+#if (USBD_USE_MTP == 1)
+  if (MTP_ACTIVE()) {
+      USBD_MTP.DeInit(pdev, cfgidx);
   }
 #endif
 #if (USBD_USE_DFU == 1)
@@ -404,6 +435,12 @@ static uint8_t USBD_COMPOSITE_Setup(USBD_HandleTypeDef *pdev,
   if (LOBYTE(req->wIndex) == UVC_VC_IF_NUM || LOBYTE(req->wIndex) == UVC_VS_IF_NUM)
   {
     return USBD_VIDEO.Setup(pdev, req);
+  }
+#endif
+#if (USBD_USE_MTP == 1)
+  if (MTP_ACTIVE() && LOBYTE(req->wIndex) == MTP_ITF_NBR)
+  {
+    return USBD_MTP.Setup(pdev, req);
   }
 #endif
 #if (USBD_USE_MSC == 1)
@@ -492,6 +529,13 @@ static uint8_t USBD_COMPOSITE_DataIn(USBD_HandleTypeDef *pdev, uint8_t epnum)
     return USBD_VIDEO.DataIn(pdev, epnum);
   }
 #endif
+#if (USBD_USE_MTP == 1)
+  if (MTP_ACTIVE() &&
+      (epnum == (MTP_IN_EP & 0x7F) || epnum == (MTP_INT_EP & 0x7F)))
+  {
+    return USBD_MTP.DataIn(pdev, epnum);
+  }
+#endif
 #if (USBD_USE_MSC == 1)
   if (sUSBD_MSC_Enable) {
       if (epnum == (MSC_IN_EP & 0x7F))
@@ -548,6 +592,11 @@ static uint8_t USBD_COMPOSITE_EP0_RxReady(USBD_HandleTypeDef *pdev)
 #endif
 #if (USBD_USE_DFU == 1)
   USBD_DFU.EP0_RxReady(pdev);
+#endif
+#if (USBD_USE_MTP == 1)
+  if (MTP_ACTIVE()) {
+      USBD_MTP.EP0_RxReady(pdev);
+  }
 #endif
 #if (USBD_USE_PRNTR == 1)
 #endif
@@ -769,6 +818,12 @@ static uint8_t USBD_COMPOSITE_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
 #endif
 #if (USBD_USE_UVC == 1)
 #endif
+#if (USBD_USE_MTP == 1)
+  if (MTP_ACTIVE() && epnum == MTP_OUT_EP)
+  {
+    return USBD_MTP.DataOut(pdev, epnum);
+  }
+#endif
 #if (USBD_USE_MSC == 1)
   if (sUSBD_MSC_Enable) {
       if (epnum == MSC_OUT_EP)
@@ -977,6 +1032,12 @@ static uint8_t *USBD_COMPOSITE_GetUsrStringDesc(USBD_HandleTypeDef *pdev, uint8_
         }
     }
 #endif
+#if (USBD_USE_MTP == 1)
+    if (MTP_ACTIVE() && index == MTP_STR_DESC_IDX)
+    {
+      USBD_GetString((uint8_t *)MTP_STR_DESC, USBD_StrDesc, length);
+    }
+#endif
 #if (USBD_USE_DFU == 1)
     if (index == DFU_STR_DESC_IDX)
     {
@@ -1010,6 +1071,8 @@ void USBD_COMPOSITE_Mount_Class(void)
   uint8_t in_ep_track = 0x81;
   uint8_t out_ep_track = 0x01;
   uint8_t interface_no_track = 0x00;
+
+  USBD_Track_String_Index = (USBD_IDX_INTERFACE_STR + 1);
 
 #if (USBD_USE_CDC_RNDIS == 1)
   ptr = USBD_CDC_RNDIS.GetFSConfigDescriptor(&len);
@@ -1275,10 +1338,32 @@ static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void)
   uint8_t in_ep_track = 0x81;
   uint8_t out_ep_track = 0x01;
   uint8_t interface_no_track = 0x00;
+  uint16_t len = 0;
 
+  /* Indexes belong to one configuration; without this every reinit would
+     push them further, towards the 8-bit limit. */
+  USBD_Track_String_Index = (USBD_IDX_INTERFACE_STR + 1);
+
+#if (USBD_USE_MTP == 1)
+  /* First, so its bulk IN gets endpoint 1 and the large TX FIFO that the
+     Mass Storage configuration gives that endpoint (see usbd_conf.c). */
+  ptr = USBD_MTP.GetFSConfigDescriptor(&len);
+  USBD_Update_MTP_DESC(ptr, interface_no_track, in_ep_track, out_ep_track,
+                       in_ep_track + 1, USBD_Track_String_Index);
+  memcpy(USBD_COMPOSITE_FSCfgDesc_VCP_ONLY.USBD_MTP_DESC, ptr + 0x09, len - 0x09);
+
+  ptr = USBD_MTP.GetHSConfigDescriptor(&len);
+  USBD_Update_MTP_DESC(ptr, interface_no_track, in_ep_track, out_ep_track,
+                       in_ep_track + 1, USBD_Track_String_Index);
+  memcpy(USBD_COMPOSITE_HSCfgDesc_VCP_ONLY.USBD_MTP_DESC, ptr + 0x09, len - 0x09);
+
+  in_ep_track += 2;
+  out_ep_track += 1;
+  interface_no_track += 1;
+  USBD_Track_String_Index += 1;
+#endif
 
 #if (USBD_USE_CDC_ACM == 1)
-  uint16_t len = 0;
   ptr = USBD_CDC_ACM.GetFSConfigDescriptor(&len);
   USBD_Update_CDC_ACM_DESC(ptr,
                            interface_no_track,

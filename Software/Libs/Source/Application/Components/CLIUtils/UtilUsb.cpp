@@ -16,6 +16,11 @@
 #include "Backend.hpp"
 #include "SettingsDebugManager.hpp"
 #include "UsbDevice.hpp"
+#include "main.h"
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+#include "MtpResponder.hpp"
+#include "usbd_mtp.h"
+#endif
 
 #include <string.h>
 
@@ -36,6 +41,37 @@ void printStatus()
                      (backend.isMsdHeld() ? "closed (until 'usb drive on' or unplug)" : "closed"));
     CLIConsole_print("computer: %s\n", host ? "connected" : "not connected");
     CLIConsole_print("reopen:   %s\n", reopen ? "on" : "off");
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    const bool mtp = Settings::DebugManager::GetInstance().getSettings().usbCfg.mtp;
+    CLIConsole_print("mtp:      %s\n", mtp ? "on (plug-in serves MTP, drive stays closed)"
+                                           : "off (MTP only while the drive is closed)");
+
+    const MtpResponder &r = MtpResponder::GetInstance();
+    const volatile MtpResponder::Stats &s = r.stats();
+    CLIConsole_print("mtp now:  %s, session %lu, ep in 0x%02X out 0x%02X int 0x%02X itf %u\n",
+                     r.isOpen() ? "configured" : "not configured",
+                     (unsigned long)r.session(), MTP_IN_EP, MTP_OUT_EP, MTP_INT_EP,
+                     MTP_ITF_NBR);
+    CLIConsole_print("mtp cfg:  on %lu off %lu; setup %lu (last 0x%04lX)\n",
+                     (unsigned long)s.cfgOn, (unsigned long)s.cfgOff,
+                     (unsigned long)USBD_MTP_SetupCount, (unsigned long)USBD_MTP_LastSetup);
+    CLIConsole_print("mtp rx:   armed %lu done %lu (last %lu bytes); commands %lu (last 0x%04lX)\n",
+                     (unsigned long)s.rxArmed, (unsigned long)s.rxDone,
+                     (unsigned long)s.lastRxLen, (unsigned long)s.commands,
+                     (unsigned long)s.lastOp);
+    CLIConsole_print("mtp tx:   start %lu done %lu fail %lu; last response 0x%04lX; "
+                     "aborts %lu cancels %lu\n",
+                     (unsigned long)s.txStart, (unsigned long)s.txDone, (unsigned long)s.txFail,
+                     (unsigned long)s.lastResp, (unsigned long)s.aborts,
+                     (unsigned long)s.cancels);
+    CLIConsole_print("mtp drop: rx dropped %lu; not a command %lu (last 0x%08lX); "
+                     "last flags 0x%08lX\n",
+                     (unsigned long)s.rxDropped, (unsigned long)s.notCommand,
+                     (unsigned long)s.lastHeader, (unsigned long)s.lastFlags);
+    CLIConsole_print("mtp poll: %lu polls, %lu events sent, %lu not sent\n",
+                     (unsigned long)s.polls, (unsigned long)s.events,
+                     (unsigned long)s.eventFails);
+#endif
 }
 
 void driveOn()

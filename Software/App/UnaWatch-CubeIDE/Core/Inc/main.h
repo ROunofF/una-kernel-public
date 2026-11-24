@@ -264,6 +264,8 @@ void ErrorHandler(const char *file, uint32_t line);
 
 #define USB_CDC_ENABLE          (1)
 #define USB_MSC_ENABLE          (1)
+// MTP alongside the serial port while the USB drive is closed
+#define USB_MTP_ENABLE          (1)
 
 // Vibro
 #define VIBRO_USE_SETTINGS_IN_RTC (1)

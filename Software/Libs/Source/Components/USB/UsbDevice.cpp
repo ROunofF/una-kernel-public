@@ -34,6 +34,10 @@ extern "C" void USBD_COMPOSITE_EnableMSC(bool enable);
 
 extern "C" void USBD_COMPOSITE_SetConfiguredCallback(void (*cb)(void));
 
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+#include "MtpResponder.hpp"
+#endif
+
 // USB Device handle
 static USBD_HandleTypeDef hUsbDevice;
 
@@ -177,6 +181,12 @@ bool UsbDevice::init(bool mscEnable, uint8_t mscDisk)
     mIsMscEnabled = mscEnable;
     mMscDisk      = mscDisk;
 
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    if (!MtpResponder::GetInstance().init()) {
+        LOG_ERROR("MTP responder init failed\n");
+    }
+#endif
+
     // PHY clocks required for HAL_PCD_Init register access
     DriverUsb_PhyEnable();
     mIsInit = initDevice();
@@ -223,6 +233,14 @@ bool UsbDevice::reinit(bool mscEnable, uint8_t mscDisk)
         return false;
     }
 
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    // Mass Storage hands the volume's raw blocks to the host, so nothing on
+    // the MTP side may be halfway through a FatFs call when it opens.
+    if (mscEnable && !MtpResponder::GetInstance().suspend(2000)) {
+        LOG_WARNING("MTP still busy; opening Mass Storage anyway\n");
+    }
+#endif
+
     // Remember if stack was running - restore state after reinit
     bool wasOn = mIsOn;
 
@@ -252,6 +270,12 @@ bool UsbDevice::reinit(bool mscEnable, uint8_t mscDisk)
             LOG_ERROR("reinit: USBD_Start failed\n");
         }
     }
+
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    if (!mscEnable) {
+        MtpResponder::GetInstance().resume();
+    }
+#endif
 
     unlock();
     return mIsInit;

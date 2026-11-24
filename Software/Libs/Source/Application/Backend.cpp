@@ -2059,6 +2059,13 @@ void Backend::onHostConfigured()
     // wall chargers as a PC. Opening MSD stops every app, so it must wait for
     // a host that has actually enumerated the device.
     LOG_INFO("USB host configured the device\n");
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    // The host has the files over MTP already; the watch stays usable.
+    if (Settings::DebugManager::GetInstance().getSettings().usbCfg.mtp) {
+        LOG_INFO("USB drive left closed: serving MTP (usbCfg.mtp)\n");
+        return;
+    }
+#endif
     sendEventToBackend(G2BEvent::MsdOpen{true});
 }
 

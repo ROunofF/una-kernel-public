@@ -27,6 +27,15 @@
 
 
 
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+#include "usbd_mtp.h"
+#endif
+
+extern bool USBD_COMPOSITE_IsMSCEnabled(void);
+
+// IN endpoints 1..8 on the OTG core (index 0 unused here)
+#define USBD_TX_FIFO_COUNT  9U
+
 // Private function prototypes
 static USBD_StatusTypeDef USBD_Get_USB_Status(HAL_StatusTypeDef hal_status);
 
@@ -251,17 +260,43 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
     HAL_PCDEx_SetRxFiFoInBytes(pcdHandle, rxFifoSize);
     HAL_PCDEx_SetTxFiFoInBytes(pcdHandle, 0, txFifoEp0Size);
 
+    // One size per IN endpoint, from the endpoints the composite gave out
+    // for this configuration. Mass Storage on or off changes them, and every
+    // reinit comes through here.
+    uint16_t txFifo[USBD_TX_FIFO_COUNT] = { 0 };
+    const bool mscOn = USBD_COMPOSITE_IsMSCEnabled();
+    (void)mscOn;
+
 #if (USBD_USE_MSC == 1)
-    // MSC TX
-    uint16_t txFifoMscSize = isHS ? 1024 : 128;
-    HAL_PCDEx_SetTxFiFoInBytes(pcdHandle, (MSC_IN_EP & 0x7F), txFifoMscSize);
+    if (mscOn) {
+        txFifo[MSC_IN_EP & 0x7F] = isHS ? 1024 : 128;
+    }
+#endif
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    if (!mscOn) {
+        txFifo[MTP_IN_EP & 0x7F]  = isHS ? 1024 : 128;
+        txFifo[MTP_INT_EP & 0x7F] = 64;
+    }
 #endif
 #if (USBD_USE_CDC_ACM == 1)
     for (uint8_t i = 0; i < USBD_CDC_ACM_COUNT; i++) {
-        HAL_PCDEx_SetTxFiFoInBytes(pcdHandle, (CDC_IN_EP[i] & 0x7F), USB_CDC_ACM_TX_FIFO);
-        HAL_PCDEx_SetTxFiFoInBytes(pcdHandle, (CDC_CMD_EP[i] & 0x7F), 64);
+        txFifo[CDC_IN_EP[i] & 0x7F]  = USB_CDC_ACM_TX_FIFO;
+        txFifo[CDC_CMD_EP[i] & 0x7F] = 64;
     }
 #endif
+
+    // HAL_PCDEx_SetTxFiFo() places each FIFO after the ones below it, so they
+    // are set in order. An unused one below a used one still needs the
+    // 16-word minimum (see the note in HAL_PCDEx_SetTxFiFo).
+    uint8_t lastEp = 0;
+    for (uint8_t ep = 1; ep < USBD_TX_FIFO_COUNT; ep++) {
+        if (txFifo[ep] != 0) {
+            lastEp = ep;
+        }
+    }
+    for (uint8_t ep = 1; ep <= lastEp; ep++) {
+        HAL_PCDEx_SetTxFiFoInBytes(pcdHandle, ep, (txFifo[ep] != 0) ? txFifo[ep] : 64);
+    }
 
 
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)
