@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <ctime>
+#include <new>
 
 #include "main.h"
 #include "usbd_mtp.h"
@@ -505,6 +506,40 @@ void MtpResponder::resume()
     mSuspended = false;
 }
 
+bool MtpResponder::allocBuffers()
+{
+    mBuf = new (std::nothrow) Buffers;
+    if (mBuf == nullptr) {
+        if (!mOutOfMemory) {
+            LOG_ERROR("no memory for MTP (%u bytes)\n", (unsigned)sizeof(Buffers));
+        }
+        mOutOfMemory = true;
+        mStats.allocFails = mStats.allocFails + 1;
+        return false;
+    }
+    mOutOfMemory = false;
+    mStats.allocs = mStats.allocs + 1;
+    mSession  = 0;
+    mTxCur    = 0;
+    mListCount = 0;
+    resetObjects();
+    return true;
+}
+
+void MtpResponder::freeBuffers()
+{
+    delete mBuf;
+    mBuf = nullptr;
+    mObjCount  = 0;
+    mNameUsed  = 0;
+    mListCount = 0;
+}
+
+uint32_t MtpResponder::heapBytes() const
+{
+    return (mBuf != nullptr) ? sizeof(Buffers) : 0;
+}
+
 void MtpResponder::signal(uint32_t flags)
 {
     if (mThreadId != nullptr) {
@@ -569,7 +604,19 @@ void MtpResponder::thread()
         if (!mOpen) {
             mSession       = 0;
             mPendingHandle = 0;
+            // The endpoints are closed by now (USBD_MTP_DeInit closes them
+            // before reporting), so nothing can still write the buffers.
+            freeBuffers();
             (void)osThreadFlagsWait(kFlagCfgOn, osFlagsWaitAny, osWaitForever);
+            continue;
+        }
+
+        if ((mBuf == nullptr) && !allocBuffers()) {
+            // Apps hold the memory. The host's first command goes
+            // unanswered and it gives up; try again in a while, or when the
+            // interface comes or goes.
+            (void)osThreadFlagsWait(kFlagCfgOn | kFlagCfgOff, osFlagsWaitAny,
+                                    pdMS_TO_TICKS(kPollMs));
             continue;
         }
 
@@ -588,23 +635,23 @@ void MtpResponder::thread()
 
         // A zero-length packet left over from the last data phase, or
         // anything else that is not a command.
-        if ((len < kHeader) || (get16(mRx + 4) != CT_COMMAND)) {
+        if ((len < kHeader) || (get16(mBuf->rx + 4) != CT_COMMAND)) {
             mStats.notCommand = mStats.notCommand + 1;
-            mStats.lastHeader = (len >= 8) ? ((uint32_t)get16(mRx + 4) << 16) | get16(mRx + 6)
+            mStats.lastHeader = (len >= 8) ? ((uint32_t)get16(mBuf->rx + 4) << 16) | get16(mBuf->rx + 6)
                                            : 0xFFFF0000u | len;
             continue;
         }
 
         mStats.commands = mStats.commands + 1;
-        mStats.lastOp   = get16(mRx + 6);
-        mCmd.code    = get16(mRx + 6);
-        mCmd.tid     = get32(mRx + 8);
+        mStats.lastOp   = get16(mBuf->rx + 6);
+        mCmd.code    = get16(mBuf->rx + 6);
+        mCmd.tid     = get32(mBuf->rx + 8);
         mCmd.nparams = (len - kHeader) / 4;
         if (mCmd.nparams > 5) {
             mCmd.nparams = 5;
         }
         for (uint32_t i = 0; i < 5; i++) {
-            mCmd.p[i] = (i < mCmd.nparams) ? get32(mRx + kHeader + 4 * i) : 0;
+            mCmd.p[i] = (i < mCmd.nparams) ? get32(mBuf->rx + kHeader + 4 * i) : 0;
         }
 
         USBD_MTP_SetBusy(true);
@@ -681,7 +728,7 @@ bool MtpResponder::rxCommand(uint32_t &len)
     if (!mRxArmed) {
         mRxArmed = true;
         mStats.rxArmed = mStats.rxArmed + 1;
-        if (!USBD_MTP_Receive(mRx, mps())) {
+        if (!USBD_MTP_Receive(mBuf->rx, mps())) {
             mRxArmed = false;
             mAbort   = true;
             return false;
@@ -734,7 +781,7 @@ bool MtpResponder::rxPacket(uint32_t want, uint32_t &len, uint32_t timeoutMs)
     if (!mRxArmed) {
         mRxArmed = true;
         mStats.rxArmed = mStats.rxArmed + 1;
-        if (!USBD_MTP_Receive(mRx, want)) {
+        if (!USBD_MTP_Receive(mBuf->rx, want)) {
             mRxArmed = false;
             mAbort   = true;
             return false;
@@ -791,7 +838,7 @@ bool MtpResponder::txSend(const uint8_t *buf, uint32_t len)
 bool MtpResponder::txFlush(uint32_t len)
 {
     // Two buffers: the next one is filled while this one goes out.
-    const bool ok = txSend(mTx[mTxCur], len);
+    const bool ok = txSend(mBuf->tx[mTxCur], len);
     mTxCur ^= 1;
     return ok;
 }
@@ -849,14 +896,14 @@ bool MtpResponder::rxData(Sink &&sink, bool &complete)
     if (!rxPacket(mps(), len, kRxTimeout)) {
         return false;
     }
-    if ((len < kHeader) || (get16(mRx + 4) != CT_DATA)) {
+    if ((len < kHeader) || (get16(mBuf->rx + 4) != CT_DATA)) {
         LOG_WARNING("expected data phase for op 0x%04X\n", mCmd.code);
         return true;
     }
 
-    const uint32_t total = get32(mRx);
+    const uint32_t total = get32(mBuf->rx);
     uint32_t got = len;
-    bool sinkOk = sink(mRx + kHeader, len - kHeader);
+    bool sinkOk = sink(mBuf->rx + kHeader, len - kHeader);
 
     while (got < total) {
         uint32_t want = total - got;
@@ -871,7 +918,7 @@ bool MtpResponder::rxData(Sink &&sink, bool &complete)
             break;
         }
         if (sinkOk) {
-            sinkOk = sink(mRx, len);
+            sinkOk = sink(mBuf->rx, len);
         }
         got += len;
         if (len < want) {
@@ -883,7 +930,7 @@ bool MtpResponder::rxData(Sink &&sink, bool &complete)
     return true;
 }
 
-/* Small datasets (ObjectInfo, a property value) gathered into mTx[0]. */
+/* Small datasets (ObjectInfo, a property value) gathered into mBuf->tx[0]. */
 bool MtpResponder::rxDataset(uint32_t &len)
 {
     len = 0;
@@ -894,7 +941,7 @@ bool MtpResponder::rxDataset(uint32_t &len)
             fits = false;
             return false;
         }
-        memcpy(mTx[0] + len, p, n);
+        memcpy(mBuf->tx[0] + len, p, n);
         len += n;
         return true;
     }, complete);
@@ -916,7 +963,7 @@ void MtpResponder::resetObjects()
 uint32_t MtpResponder::findObject(uint32_t parent, const char *name, size_t len) const
 {
     for (uint32_t i = 0; i < mObjCount; i++) {
-        const Obj &o = mObjs[i];
+        const Obj &o = mBuf->objs[i];
         if ((o.parent == parent) && ((o.flags & kObjGone) == 0) &&
                 (o.nameLen == len) && (memcmp(nameOf(o), name, len) == 0)) {
             return i + 1;
@@ -930,7 +977,7 @@ void MtpResponder::markListed(uint32_t folder)
     if (folder == 0) {
         mRootListed = true;
     } else {
-        mObjs[folder - 1].flags |= kObjListed;
+        mBuf->objs[folder - 1].flags |= kObjListed;
     }
     mAnyListed = true;
 }
@@ -940,7 +987,7 @@ const MtpResponder::Obj *MtpResponder::object(uint32_t handle) const
     if ((handle == 0) || (handle > mObjCount)) {
         return nullptr;
     }
-    const Obj &o = mObjs[handle - 1];
+    const Obj &o = mBuf->objs[handle - 1];
     return ((o.flags & kObjGone) != 0) ? nullptr : &o;
 }
 
@@ -956,21 +1003,21 @@ uint32_t MtpResponder::addObject(uint32_t parent, const char *name, size_t len,
     // The same file keeps its handle each time the host lists the folder.
     const uint32_t found = findObject(parent, name, len);
     if (found != 0) {
-        Obj &o = mObjs[found - 1];
+        Obj &o = mBuf->objs[found - 1];
         o.flags = (uint8_t)(dir ? (o.flags | kObjDir) : (o.flags & ~kObjDir));
         return found;
     }
     if ((mObjCount >= kMaxObjects) || (mNameUsed + len + 1 > kNamePool)) {
         return 0;
     }
-    Obj &o = mObjs[mObjCount];
+    Obj &o = mBuf->objs[mObjCount];
     o.parent  = parent;
     o.nameOff = mNameUsed;
     o.nameLen = (uint16_t)len;
     o.flags   = dir ? kObjDir : 0;
     o.stamp   = 0;
-    memcpy(&mNames[mNameUsed], name, len);
-    mNames[mNameUsed + len] = '\0';
+    memcpy(&mBuf->names[mNameUsed], name, len);
+    mBuf->names[mNameUsed + len] = '\0';
     mNameUsed += len + 1;
     return ++mObjCount;
 }
@@ -980,11 +1027,11 @@ bool MtpResponder::setName(uint32_t handle, const char *name, size_t len)
     if ((handle == 0) || (handle > mObjCount) || (mNameUsed + len + 1 > kNamePool)) {
         return false;
     }
-    Obj &o = mObjs[handle - 1];
+    Obj &o = mBuf->objs[handle - 1];
     o.nameOff = mNameUsed;
     o.nameLen = (uint16_t)len;
-    memcpy(&mNames[mNameUsed], name, len);
-    mNames[mNameUsed + len] = '\0';
+    memcpy(&mBuf->names[mNameUsed], name, len);
+    mBuf->names[mNameUsed + len] = '\0';
     mNameUsed += len + 1;
     return true;
 }
@@ -993,7 +1040,7 @@ bool MtpResponder::pathOf(uint32_t handle, char *out, size_t cap) const
 {
     uint32_t chain[32];
     size_t depth = 0;
-    for (uint32_t h = handle; h != 0; h = mObjs[h - 1].parent) {
+    for (uint32_t h = handle; h != 0; h = mBuf->objs[h - 1].parent) {
         if ((object(h) == nullptr) || (depth >= 32)) {
             return false;
         }
@@ -1009,7 +1056,7 @@ bool MtpResponder::pathOf(uint32_t handle, char *out, size_t cap) const
         out[pos++] = '/';
     }
     while (depth > 0) {
-        const Obj &o = mObjs[chain[--depth] - 1];
+        const Obj &o = mBuf->objs[chain[--depth] - 1];
         if (pos + 1 + o.nameLen + 1 > cap) {
             return false;
         }
@@ -1054,19 +1101,19 @@ bool MtpResponder::resolveParent(uint32_t param, uint32_t &parent) const
 uint32_t MtpResponder::listChildren(uint32_t parent, uint16_t format)
 {
     mListCount = 0;
-    if (!pathOf(parent, mPath, sizeof(mPath))) {
+    if (!pathOf(parent, mBuf->path, sizeof(mBuf->path))) {
         return kAll;
     }
-    if (f_opendir(&mDir, mPath) != FR_OK) {
+    if (f_opendir(&mBuf->dir, mBuf->path) != FR_OK) {
         return kAll;
     }
     bool full = false;
-    while ((f_readdir(&mDir, &mFno) == FR_OK) && (mFno.fname[0] != '\0')) {
-        const char *n = mFno.fname;
+    while ((f_readdir(&mBuf->dir, &mBuf->fno) == FR_OK) && (mBuf->fno.fname[0] != '\0')) {
+        const char *n = mBuf->fno.fname;
         if ((strcmp(n, ".") == 0) || (strcmp(n, "..") == 0)) {
             continue;
         }
-        const bool dir = (mFno.fattrib & AM_DIR) != 0;
+        const bool dir = (mBuf->fno.fattrib & AM_DIR) != 0;
         if ((format != 0) && (format != (dir ? FMT_ASSOCIATION : FMT_UNDEFINED))) {
             continue;
         }
@@ -1079,20 +1126,20 @@ uint32_t MtpResponder::listChildren(uint32_t parent, uint16_t format)
             full = true;
             break;
         }
-        Info &info = mListInfo[mListCount];
-        info.size  = dir ? 0 : mFno.fsize;
-        info.fdate = mFno.fdate;
-        info.ftime = mFno.ftime;
+        Info &info = mBuf->listInfo[mListCount];
+        info.size  = dir ? 0 : mBuf->fno.fsize;
+        info.fdate = mBuf->fno.fdate;
+        info.ftime = mBuf->fno.ftime;
         info.ok    = true;
-        mObjs[h - 1].stamp = dir ? 0 : stampOf(info.size, info.fdate, info.ftime);
-        mList[mListCount++] = h;
+        mBuf->objs[h - 1].stamp = dir ? 0 : stampOf(info.size, info.fdate, info.ftime);
+        mBuf->list[mListCount++] = h;
     }
-    f_closedir(&mDir);
+    f_closedir(&mBuf->dir);
     // From now on the host keeps this folder's contents; pollFolder() tells
     // it what changes.
     markListed(parent);
     if (full) {
-        LOG_WARNING("listing of %s cut at %u entries\n", mPath, (unsigned)mListCount);
+        LOG_WARNING("listing of %s cut at %u entries\n", mBuf->path, (unsigned)mListCount);
     }
     return mListCount;
 }
@@ -1100,14 +1147,14 @@ uint32_t MtpResponder::listChildren(uint32_t parent, uint16_t format)
 MtpResponder::Info MtpResponder::infoOf(uint32_t handle)
 {
     Info info{};
-    if (pathOf(handle, mPath, sizeof(mPath)) && (f_stat(mPath, &mFno) == FR_OK)) {
-        const bool dir = (mFno.fattrib & AM_DIR) != 0;
-        info.size  = dir ? 0 : mFno.fsize;
-        info.fdate = mFno.fdate;
-        info.ftime = mFno.ftime;
+    if (pathOf(handle, mBuf->path, sizeof(mBuf->path)) && (f_stat(mBuf->path, &mBuf->fno) == FR_OK)) {
+        const bool dir = (mBuf->fno.fattrib & AM_DIR) != 0;
+        info.size  = dir ? 0 : mBuf->fno.fsize;
+        info.fdate = mBuf->fno.fdate;
+        info.ftime = mBuf->fno.ftime;
         info.ok    = true;
         if ((handle != 0) && !dir) {
-            mObjs[handle - 1].stamp = stampOf(info.size, info.fdate, info.ftime);
+            mBuf->objs[handle - 1].stamp = stampOf(info.size, info.fdate, info.ftime);
         }
     }
     return info;
@@ -1142,7 +1189,7 @@ void MtpResponder::pollChanges()
     // Folders added by this poll are not listed yet, so mObjCount growing
     // under the loop is harmless.
     for (uint32_t i = 0; (i < mObjCount) && !mEvtFailed; i++) {
-        const uint8_t f = mObjs[i].flags;
+        const uint8_t f = mBuf->objs[i].flags;
         if ((f & (kObjDir | kObjListed | kObjGone)) == (kObjDir | kObjListed)) {
             pollFolder(i + 1);
         }
@@ -1152,25 +1199,25 @@ void MtpResponder::pollChanges()
 
 void MtpResponder::pollFolder(uint32_t folder)
 {
-    if (!pathOf(folder, mPath, sizeof(mPath)) || (f_opendir(&mDir, mPath) != FR_OK)) {
+    if (!pathOf(folder, mBuf->path, sizeof(mBuf->path)) || (f_opendir(&mBuf->dir, mBuf->path) != FR_OK)) {
         // Gone: the poll of its parent reports that.
         return;
     }
 
     FRESULT res;
-    while (((res = f_readdir(&mDir, &mFno)) == FR_OK) && (mFno.fname[0] != '\0') &&
+    while (((res = f_readdir(&mBuf->dir, &mBuf->fno)) == FR_OK) && (mBuf->fno.fname[0] != '\0') &&
            !mEvtFailed) {
-        const char *n = mFno.fname;
+        const char *n = mBuf->fno.fname;
         if ((strcmp(n, ".") == 0) || (strcmp(n, "..") == 0)) {
             continue;
         }
-        const bool dir = (mFno.fattrib & AM_DIR) != 0;
+        const bool dir = (mBuf->fno.fattrib & AM_DIR) != 0;
         const size_t len = strlen(n);
-        const uint32_t stamp = dir ? 0 : stampOf(mFno.fsize, mFno.fdate, mFno.ftime);
+        const uint32_t stamp = dir ? 0 : stampOf(mBuf->fno.fsize, mBuf->fno.fdate, mBuf->fno.ftime);
 
         uint32_t h = findObject(folder, n, len);
         if (h != 0) {
-            Obj &o = mObjs[h - 1];
+            Obj &o = mBuf->objs[h - 1];
             o.flags |= kObjSeen;
             // A file the host is about to fill (SendObjectInfo, then
             // SendObject) is its own; it asks again once that is done.
@@ -1189,19 +1236,19 @@ void MtpResponder::pollFolder(uint32_t folder)
         if (h == 0) {
             continue;                       // Table full: the host never sees it
         }
-        Obj &o = mObjs[h - 1];
+        Obj &o = mBuf->objs[h - 1];
         o.flags |= kObjSeen;
         o.stamp  = stamp;
         if (!sendEvent(EV_OBJECT_ADDED, h)) {
             o.flags |= kObjGone;            // Announced again by a later poll
         }
     }
-    f_closedir(&mDir);
+    f_closedir(&mBuf->dir);
 
     // Only a complete listing says what is gone.
     const bool complete = (res == FR_OK) && !mEvtFailed;
     for (uint32_t i = 0; i < mObjCount; i++) {
-        Obj &o = mObjs[i];
+        Obj &o = mBuf->objs[i];
         if ((o.parent != folder) || ((o.flags & kObjGone) != 0)) {
             continue;
         }
@@ -1253,9 +1300,9 @@ void MtpResponder::forgetTree(uint32_t handle)
 {
     for (uint32_t i = 0; i < mObjCount; i++) {
         uint32_t depth = 0;
-        for (uint32_t h = i + 1; (h != 0) && (depth < 32); h = mObjs[h - 1].parent, depth++) {
+        for (uint32_t h = i + 1; (h != 0) && (depth < 32); h = mBuf->objs[h - 1].parent, depth++) {
             if (h == handle) {
-                mObjs[i].flags |= kObjGone;
+                mBuf->objs[i].flags |= kObjGone;
                 break;
             }
         }
@@ -1268,32 +1315,32 @@ FRESULT MtpResponder::deleteTree(char *path)
 {
     const size_t baseLen = strlen(path);
     for (;;) {
-        FRESULT res = f_opendir(&mDir, path);
+        FRESULT res = f_opendir(&mBuf->dir, path);
         if (res != FR_OK) {
             return res;
         }
         bool found = false;
         bool dir   = false;
-        while (((res = f_readdir(&mDir, &mFno)) == FR_OK) && (mFno.fname[0] != '\0')) {
-            if ((strcmp(mFno.fname, ".") != 0) && (strcmp(mFno.fname, "..") != 0)) {
+        while (((res = f_readdir(&mBuf->dir, &mBuf->fno)) == FR_OK) && (mBuf->fno.fname[0] != '\0')) {
+            if ((strcmp(mBuf->fno.fname, ".") != 0) && (strcmp(mBuf->fno.fname, "..") != 0)) {
                 found = true;
-                dir   = (mFno.fattrib & AM_DIR) != 0;
+                dir   = (mBuf->fno.fattrib & AM_DIR) != 0;
                 break;
             }
         }
-        f_closedir(&mDir);
+        f_closedir(&mBuf->dir);
         if (res != FR_OK) {
             return res;
         }
 
         size_t len = strlen(path);
         if (found) {
-            const size_t n = strlen(mFno.fname);
+            const size_t n = strlen(mBuf->fno.fname);
             if (len + 1 + n + 1 > kPathMax) {
                 return FR_INVALID_NAME;
             }
             path[len] = '/';
-            memcpy(path + len + 1, mFno.fname, n + 1);
+            memcpy(path + len + 1, mBuf->fno.fname, n + 1);
             if (dir) {
                 continue;               // Empty it first
             }
@@ -1523,7 +1570,7 @@ void MtpResponder::opGetObjectHandles()
     sendData([&](Writer &w) {
         w.u32(n);
         for (uint32_t i = 0; i < n; i++) {
-            w.u32(mList[i]);
+            w.u32(mBuf->list[i]);
         }
     });
     respond(RC_OK);
@@ -1572,17 +1619,17 @@ void MtpResponder::opGetObject(bool partial)
         respond(RC_INVALID_OBJECT_HANDLE);
         return;
     }
-    if (!pathOf(h, mPath, sizeof(mPath))) {
+    if (!pathOf(h, mBuf->path, sizeof(mBuf->path))) {
         respond(RC_INVALID_OBJECT_HANDLE);
         return;
     }
-    FRESULT res = f_open(&mFil, mPath, FA_READ);
+    FRESULT res = f_open(&mBuf->fil, mBuf->path, FA_READ);
     if (res != FR_OK) {
         respond(mapResult(res));
         return;
     }
 
-    uint64_t size = f_size(&mFil);
+    uint64_t size = f_size(&mBuf->fil);
     uint32_t offset = 0;
     if (partial) {
         offset = mCmd.p[1];
@@ -1593,14 +1640,14 @@ void MtpResponder::opGetObject(bool partial)
         if (size > mCmd.p[2]) {
             size = mCmd.p[2];
         }
-        if ((offset != 0) && (f_lseek(&mFil, offset) != FR_OK)) {
-            f_close(&mFil);
+        if ((offset != 0) && (f_lseek(&mBuf->fil, offset) != FR_OK)) {
+            f_close(&mBuf->fil);
             respond(RC_GENERAL_ERROR);
             return;
         }
     }
     if (size > 0xFFFFFFFFu - kHeader) {
-        f_close(&mFil);
+        f_close(&mBuf->fil);
         respond(RC_GENERAL_ERROR);
         return;
     }
@@ -1624,7 +1671,7 @@ void MtpResponder::opGetObject(bool partial)
             n = remaining;
         }
         UINT br = 0;
-        if ((f_read(&mFil, b + pos, n, &br) != FR_OK) || (br < n)) {
+        if ((f_read(&mBuf->fil, b + pos, n, &br) != FR_OK) || (br < n)) {
             memset(b + pos + br, 0, n - br);
         }
         pos += n;
@@ -1638,7 +1685,7 @@ void MtpResponder::opGetObject(bool partial)
     if (ok && (pos > 0)) {
         ok = txFlush(pos);          // Header only: an empty file
     }
-    f_close(&mFil);
+    f_close(&mBuf->fil);
     if (ok && ((total % mps()) == 0)) {
         ok = txZlp();
     }
@@ -1659,12 +1706,12 @@ void MtpResponder::opDeleteObject()
         return;
     }
     const Obj *o = object(h);
-    if ((o == nullptr) || !pathOf(h, mPath, sizeof(mPath))) {
+    if ((o == nullptr) || !pathOf(h, mBuf->path, sizeof(mBuf->path))) {
         respond(RC_INVALID_OBJECT_HANDLE);
         return;
     }
-    LOG_INFO("delete %s\n", mPath);
-    const FRESULT res = ((o->flags & kObjDir) != 0) ? deleteTree(mPath) : f_unlink(mPath);
+    LOG_INFO("delete %s\n", mBuf->path);
+    const FRESULT res = ((o->flags & kObjDir) != 0) ? deleteTree(mBuf->path) : f_unlink(mBuf->path);
     if (res == FR_OK) {
         forgetTree(h);
         respond(RC_OK);
@@ -1698,7 +1745,7 @@ void MtpResponder::opSendObjectInfo()
         return;
     }
 
-    Reader r(mTx[0], len);
+    Reader r(mBuf->tx[0], len);
     (void)r.u32();                              // Storage
     const uint16_t format = r.u16();
     (void)r.u16();                              // Protection
@@ -1712,13 +1759,13 @@ void MtpResponder::opSendObjectInfo()
     (void)r.u32();                              // Association desc
     (void)r.u32();                              // Sequence number
     size_t nameLen = 0;
-    if (!r.str(mName, sizeof(mName), nameLen) || (nameLen == 0) ||
-            (strchr(mName, '/') != nullptr) || (strchr(mName, '\\') != nullptr) ||
-            (strchr(mName, ':') != nullptr)) {
+    if (!r.str(mBuf->name, sizeof(mBuf->name), nameLen) || (nameLen == 0) ||
+            (strchr(mBuf->name, '/') != nullptr) || (strchr(mBuf->name, '\\') != nullptr) ||
+            (strchr(mBuf->name, ':') != nullptr)) {
         respond(RC_INVALID_DATASET);
         return;
     }
-    if (!childPath(parent, mName, mPath, sizeof(mPath))) {
+    if (!childPath(parent, mBuf->name, mBuf->path, sizeof(mBuf->path))) {
         respond(RC_INVALID_PARENT_OBJECT);
         return;
     }
@@ -1726,15 +1773,15 @@ void MtpResponder::opSendObjectInfo()
     const bool dir = (format == FMT_ASSOCIATION);
     FRESULT res;
     if (dir) {
-        res = f_mkdir(mPath);
+        res = f_mkdir(mBuf->path);
         if (res == FR_EXIST) {
             res = FR_OK;
         }
     } else {
         // Created now, so the handle names a real file; SendObject fills it.
-        res = f_open(&mFil, mPath, FA_WRITE | FA_CREATE_ALWAYS);
+        res = f_open(&mBuf->fil, mBuf->path, FA_WRITE | FA_CREATE_ALWAYS);
         if (res == FR_OK) {
-            f_close(&mFil);
+            f_close(&mBuf->fil);
         }
     }
     if (res != FR_OK) {
@@ -1742,12 +1789,12 @@ void MtpResponder::opSendObjectInfo()
         return;
     }
 
-    const uint32_t h = addObject(parent, mName, nameLen, dir);
+    const uint32_t h = addObject(parent, mBuf->name, nameLen, dir);
     if (h == 0) {
         respond(RC_STORE_FULL);
         return;
     }
-    LOG_INFO("%s %s (%u bytes)\n", dir ? "mkdir" : "create", mPath, (unsigned)size);
+    LOG_INFO("%s %s (%u bytes)\n", dir ? "mkdir" : "create", mBuf->path, (unsigned)size);
     mPendingHandle = dir ? 0 : h;
     mPendingSize   = size;
     respond(RC_OK, 3, kStorageId, parent, h);
@@ -1759,8 +1806,8 @@ void MtpResponder::opSendObject()
     mPendingHandle = 0;
 
     FRESULT res = FR_INVALID_OBJECT;
-    if ((mSession != 0) && (h != 0) && pathOf(h, mPath, sizeof(mPath))) {
-        res = f_open(&mFil, mPath, FA_WRITE | FA_CREATE_ALWAYS);
+    if ((mSession != 0) && (h != 0) && pathOf(h, mBuf->path, sizeof(mBuf->path))) {
+        res = f_open(&mBuf->fil, mBuf->path, FA_WRITE | FA_CREATE_ALWAYS);
     }
     const bool open = (res == FR_OK);
     bool full = false;
@@ -1771,7 +1818,7 @@ void MtpResponder::opSendObject()
             return false;
         }
         UINT bw = 0;
-        res = f_write(&mFil, p, n, &bw);
+        res = f_write(&mBuf->fil, p, n, &bw);
         if ((res == FR_OK) && (bw < n)) {
             full = true;
         }
@@ -1779,7 +1826,7 @@ void MtpResponder::opSendObject()
     }, complete);
 
     if (open) {
-        const FRESULT closeRes = f_close(&mFil);
+        const FRESULT closeRes = f_close(&mBuf->fil);
         if (res == FR_OK) {
             res = closeRes;
         }
@@ -1787,9 +1834,9 @@ void MtpResponder::opSendObject()
         // host forgets the object, so nothing would ever remove it.
         const bool stored = ok && !mAbort && complete && !full && (res == FR_OK);
         if (!stored) {
-            (void)f_unlink(mPath);
-            mObjs[h - 1].flags |= kObjGone;
-            LOG_INFO("upload of %s not completed, removed\n", mPath);
+            (void)f_unlink(mBuf->path);
+            mBuf->objs[h - 1].flags |= kObjGone;
+            LOG_INFO("upload of %s not completed, removed\n", mBuf->path);
         }
     }
     if (!ok || mAbort) {
@@ -1829,20 +1876,20 @@ void MtpResponder::opMoveObject()
         return;
     }
     // Not into itself or below it.
-    for (uint32_t p = parent; p != 0; p = mObjs[p - 1].parent) {
+    for (uint32_t p = parent; p != 0; p = mBuf->objs[p - 1].parent) {
         if (p == h) {
             respond(RC_INVALID_PARENT_OBJECT);
             return;
         }
     }
-    if (!pathOf(h, mPath, sizeof(mPath)) ||
-            !childPath(parent, nameOf(*o), mPath2, sizeof(mPath2))) {
+    if (!pathOf(h, mBuf->path, sizeof(mBuf->path)) ||
+            !childPath(parent, nameOf(*o), mBuf->path2, sizeof(mBuf->path2))) {
         respond(RC_INVALID_OBJECT_HANDLE);
         return;
     }
-    const FRESULT res = f_rename(mPath, mPath2);
+    const FRESULT res = f_rename(mBuf->path, mBuf->path2);
     if (res == FR_OK) {
-        mObjs[h - 1].parent = parent;
+        mBuf->objs[h - 1].parent = parent;
     }
     respond(mapResult(res));
 }
@@ -1942,24 +1989,24 @@ void MtpResponder::opSetObjectPropValue()
         respond((propType(mCmd.p[1]) == 0) ? RC_INVALID_OBJECT_PROP_CODE : RC_ACCESS_DENIED);
         return;
     }
-    Reader r(mTx[0], len);
+    Reader r(mBuf->tx[0], len);
     size_t nameLen = 0;
-    if (!got || !r.str(mName, sizeof(mName), nameLen) || (nameLen == 0) ||
-            (strchr(mName, '/') != nullptr) || (strchr(mName, '\\') != nullptr) ||
-            (strchr(mName, ':') != nullptr)) {
+    if (!got || !r.str(mBuf->name, sizeof(mBuf->name), nameLen) || (nameLen == 0) ||
+            (strchr(mBuf->name, '/') != nullptr) || (strchr(mBuf->name, '\\') != nullptr) ||
+            (strchr(mBuf->name, ':') != nullptr)) {
         respond(RC_INVALID_DATASET);
         return;
     }
-    if (!pathOf(h, mPath, sizeof(mPath)) ||
-            !childPath(o->parent, mName, mPath2, sizeof(mPath2))) {
+    if (!pathOf(h, mBuf->path, sizeof(mBuf->path)) ||
+            !childPath(o->parent, mBuf->name, mBuf->path2, sizeof(mBuf->path2))) {
         respond(RC_INVALID_OBJECT_HANDLE);
         return;
     }
-    LOG_INFO("rename %s -> %s\n", mPath, mName);
-    const FRESULT res = f_rename(mPath, mPath2);
+    LOG_INFO("rename %s -> %s\n", mBuf->path, mBuf->name);
+    const FRESULT res = f_rename(mBuf->path, mBuf->path2);
     if (res == FR_OK) {
-        if (!setName(h, mName, nameLen)) {
-            mObjs[h - 1].flags |= kObjGone;     // Out of name space: forget it
+        if (!setName(h, mBuf->name, nameLen)) {
+            mBuf->objs[h - 1].flags |= kObjGone;     // Out of name space: forget it
         }
     }
     respond(mapResult(res));
@@ -1994,8 +2041,8 @@ void MtpResponder::opGetObjectPropList()
             respond((handle == kAll) ? RC_DEPTH_UNSUPPORTED : RC_INVALID_OBJECT_HANDLE);
             return;
         }
-        mList[0] = handle;
-        mListInfo[0] = infoOf(handle);
+        mBuf->list[0] = handle;
+        mBuf->listInfo[0] = infoOf(handle);
         mListCount = 1;
     } else if (depth == 1) {
         uint32_t parent;
@@ -2021,14 +2068,14 @@ void MtpResponder::opGetObjectPropList()
     sendData([&](Writer &w) {
         w.u32(mListCount * nprops);
         for (uint32_t i = 0; i < mListCount; i++) {
-            const uint32_t h = mList[i];
-            const Obj &o = mObjs[h - 1];
+            const uint32_t h = mBuf->list[i];
+            const Obj &o = mBuf->objs[h - 1];
             for (uint32_t k = 0; k < nprops; k++) {
                 const uint16_t pc = (prop == kAll) ? kObjectProps[k] : (uint16_t)prop;
                 w.u32(h);
                 w.u16(pc);
                 w.u16(propType(pc));
-                emitProp(w, pc, h, o, mListInfo[i]);
+                emitProp(w, pc, h, o, mBuf->listInfo[i]);
             }
         }
     });

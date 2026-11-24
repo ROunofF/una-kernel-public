@@ -55,13 +55,19 @@ public:
         uint32_t aborts, cancels;
         uint32_t rxDropped, notCommand, lastHeader, lastFlags;
         uint32_t polls, events, eventFails;
+        uint32_t allocs, allocFails;
     };
     const volatile Stats &stats() const { return mStats; }
     bool isOpen() const { return mOpen; }
     uint32_t session() const { return mSession; }
 
-    // Everything below is .bss, which comes out of the heap apps share
-    // (see the linker script), so it is kept to about 64 KB.
+    /** Bytes of heap held now: only while a computer has MTP configured. */
+    uint32_t heapBytes() const;
+
+    /** The last time a computer configured MTP, the memory was not there. */
+    bool outOfMemory() const { return mOutOfMemory; }
+
+    // Sizes of what Buffers (below) holds.
     static constexpr uint32_t kBufSize    = 4096;   // Multiple of the HS packet size
     static constexpr uint32_t kMaxObjects = 1024;   // Handles given out per session
     static constexpr uint32_t kNamePool   = 16 * 1024;
@@ -128,7 +134,7 @@ private:
     bool rxPacket(uint32_t want, uint32_t &len, uint32_t timeoutMs);
     bool txSend(const uint8_t *buf, uint32_t len);
     bool txIdle();
-    uint8_t *txBuf() { return mTx[mTxCur]; }
+    uint8_t *txBuf() { return mBuf->tx[mTxCur]; }
     bool txFlush(uint32_t len);
     bool txZlp();
     void respond(uint16_t code, uint32_t nparams = 0, uint32_t p0 = 0,
@@ -152,7 +158,7 @@ private:
     void markListed(uint32_t folder);
     const Obj *object(uint32_t handle) const;
     bool isDir(uint32_t handle) const;
-    const char *nameOf(const Obj &o) const { return &mNames[o.nameOff]; }
+    const char *nameOf(const Obj &o) const { return &mBuf->names[o.nameOff]; }
     bool setName(uint32_t handle, const char *name, size_t len);
     bool pathOf(uint32_t handle, char *out, size_t cap) const;
     bool childPath(uint32_t parent, const char *name, char *out, size_t cap) const;
@@ -192,6 +198,7 @@ private:
     bool                  mRootListed = false;
     bool                  mAnyListed  = false;
     uint32_t              mLastPoll   = 0;  // Kernel ticks
+    volatile bool         mOutOfMemory = false;
 
     Command  mCmd{};
     uint32_t mSession = 0;
@@ -203,21 +210,34 @@ private:
     uint32_t mListCount = 0;
     uint8_t  mTxCur = 0;
 
-    FIL      mFil;
-    DIR      mDir;
-    FILINFO  mFno;
-    char     mPath[kPathMax];
-    char     mPath2[kPathMax];
-    char     mName[256];
-
-    alignas(4) uint8_t mRx[kBufSize];
-    alignas(4) uint8_t mTx[2][kBufSize];
     alignas(4) uint8_t mResp[32];
     alignas(4) uint8_t mEvt[16];
-    Obj      mObjs[kMaxObjects];
-    char     mNames[kNamePool];
-    uint32_t mList[kMaxList];
-    Info     mListInfo[kMaxList];
+
+    // What a computer needs, about 58 KB: allocated when one configures MTP,
+    // freed when the interface goes (unplug, drive opened, `usb mtp off`).
+    // The heap is the one apps share, so it is not held otherwise. Only the
+    // task touches it, and the USB interrupt through receives and transmits
+    // armed on it; those end when the interface's endpoints close, which is
+    // before the task sees mOpen go false and frees it.
+    struct Buffers {
+        FIL      fil;
+        DIR      dir;
+        FILINFO  fno;
+        char     path[kPathMax];
+        char     path2[kPathMax];
+        char     name[256];
+
+        alignas(4) uint8_t rx[kBufSize];
+        alignas(4) uint8_t tx[2][kBufSize];
+        Obj      objs[kMaxObjects];
+        char     names[kNamePool];
+        uint32_t list[kMaxList];
+        Info     listInfo[kMaxList];
+    };
+    Buffers *mBuf = nullptr;
+
+    bool allocBuffers();
+    void freeBuffers();
 };
 
 #endif /* __MTP_RESPONDER_HPP */

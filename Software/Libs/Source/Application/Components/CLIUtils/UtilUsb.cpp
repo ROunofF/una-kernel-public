@@ -46,7 +46,8 @@ void printStatus()
     const MtpResponder &r = MtpResponder::GetInstance();
     CLIConsole_print("mtp:      %s\n", !mtp ? "off" :
                      (open ? "on (paused while the drive is open)" :
-                      (r.session() != 0 ? "on, in use" : "on")));
+                      (r.outOfMemory() ? "on, but not enough free memory (close apps)" :
+                       (r.session() != 0 ? "on, in use" : "on"))));
 #endif
 }
 
@@ -78,6 +79,9 @@ void printMtpCounters()
     CLIConsole_print("mtp poll: %lu polls, %lu events sent, %lu not sent\n",
                      (unsigned long)s.polls, (unsigned long)s.events,
                      (unsigned long)s.eventFails);
+    CLIConsole_print("mtp ram:  %lu bytes held; allocated %lu times, failed %lu\n",
+                     (unsigned long)r.heapBytes(), (unsigned long)s.allocs,
+                     (unsigned long)s.allocFails);
 }
 
 void setMtp(bool on)
