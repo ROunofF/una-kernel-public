@@ -28,17 +28,33 @@ void USBD_COMPOSITE_SetConfiguredCallback(void (*cb)(void))
 static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void);
 
 #include "main.h"
-/* MTP rides along with the serial port whenever Mass Storage is off: the
-   watch owns its file system then, so the host can browse it through MTP
-   while the watch keeps running and writing. */
+/* MTP rides along with the serial port while Mass Storage is off, if
+   enabled (USBD_COMPOSITE_EnableMTP): the watch owns its file system then,
+   so the host can browse it through MTP while the watch keeps running and
+   writing. */
 #if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
 #define USBD_USE_MTP 1
 #include "usbd_mtp.h"
 #else
 #define USBD_USE_MTP 0
 #endif
+/* Whether the drive-closed configuration carries MTP (`usb mtp on|off`).
+   Like Mass Storage, a change takes a reinit. */
+static bool sUSBD_MTP_Enable;
+void USBD_COMPOSITE_EnableMTP(bool enable)
+{
+    sUSBD_MTP_Enable = enable;
+}
+bool USBD_COMPOSITE_IsMTPActive(void)
+{
 #if (USBD_USE_MTP == 1)
-#define MTP_ACTIVE() (!sUSBD_MSC_Enable)
+    return !sUSBD_MSC_Enable && sUSBD_MTP_Enable;
+#else
+    return false;
+#endif
+}
+#if (USBD_USE_MTP == 1)
+#define MTP_ACTIVE() (!sUSBD_MSC_Enable && sUSBD_MTP_Enable)
 #endif
 
 /**
@@ -226,6 +242,9 @@ typedef struct USBD_COMPOSITE_CFG_DESC_VCP_ONLY_t
 #pragma data_alignment = 4
 #endif
 __ALIGN_BEGIN USBD_COMPOSITE_CFG_DESC_VCP_ONLY_t USBD_COMPOSITE_FSCfgDesc_VCP_ONLY, USBD_COMPOSITE_HSCfgDesc_VCP_ONLY __ALIGN_END;
+/* Bytes of the above in use: without MTP the serial port's descriptors are
+   moved up to where MTP's would start, and the rest goes unsent. */
+static uint16_t sUSBD_VCP_ONLY_Len = sizeof(USBD_COMPOSITE_CFG_DESC_VCP_ONLY_t);
 
 
 #if defined(__ICCARM__) /*!< IAR Compiler */
@@ -856,7 +875,7 @@ static uint8_t *USBD_COMPOSITE_GetHSCfgDesc(uint16_t *length)
         *length = (uint16_t) sizeof(USBD_COMPOSITE_HSCfgDesc);
         return (uint8_t*) &USBD_COMPOSITE_HSCfgDesc;
     } else {
-        *length = (uint16_t) sizeof(USBD_COMPOSITE_HSCfgDesc_VCP_ONLY);
+        *length = sUSBD_VCP_ONLY_Len;
         return (uint8_t*) &USBD_COMPOSITE_HSCfgDesc_VCP_ONLY;
     }
 }
@@ -873,7 +892,7 @@ static uint8_t *USBD_COMPOSITE_GetFSCfgDesc(uint16_t *length)
         *length = (uint16_t) sizeof(USBD_COMPOSITE_FSCfgDesc);
         return (uint8_t*) &USBD_COMPOSITE_FSCfgDesc;
     } else {
-        *length = (uint16_t) sizeof(USBD_COMPOSITE_FSCfgDesc_VCP_ONLY);
+        *length = sUSBD_VCP_ONLY_Len;
         return (uint8_t*) &USBD_COMPOSITE_FSCfgDesc_VCP_ONLY;
     }
 }
@@ -896,10 +915,10 @@ static uint8_t *USBD_COMPOSITE_GetOtherSpeedCfgDesc(uint16_t *length)
 #endif
     } else {
 #if (USBD_USE_HS == 1)
-  *length = (uint16_t)sizeof(USBD_COMPOSITE_FSCfgDesc_VCP_ONLY);
+  *length = sUSBD_VCP_ONLY_Len;
   return (uint8_t *)&USBD_COMPOSITE_FSCfgDesc_VCP_ONLY;
 #else
-        *length = (uint16_t) sizeof(USBD_COMPOSITE_HSCfgDesc_VCP_ONLY);
+        *length = sUSBD_VCP_ONLY_Len;
         return (uint8_t*) &USBD_COMPOSITE_HSCfgDesc_VCP_ONLY;
 #endif
     }
@@ -1344,23 +1363,32 @@ static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void)
      push them further, towards the 8-bit limit. */
   USBD_Track_String_Index = (USBD_IDX_INTERFACE_STR + 1);
 
+  /* Each interface's descriptors go right after the ones before it, so
+     with MTP off the serial port starts where MTP would have. */
+  uint8_t *fsDesc = (uint8_t *)&USBD_COMPOSITE_FSCfgDesc_VCP_ONLY;
+  uint8_t *hsDesc = (uint8_t *)&USBD_COMPOSITE_HSCfgDesc_VCP_ONLY;
+  uint16_t pos = USB_CONF_DESC_SIZE;
+
 #if (USBD_USE_MTP == 1)
-  /* First, so its bulk IN gets endpoint 1 and the large TX FIFO that the
-     Mass Storage configuration gives that endpoint (see usbd_conf.c). */
-  ptr = USBD_MTP.GetFSConfigDescriptor(&len);
-  USBD_Update_MTP_DESC(ptr, interface_no_track, in_ep_track, out_ep_track,
-                       in_ep_track + 1, USBD_Track_String_Index);
-  memcpy(USBD_COMPOSITE_FSCfgDesc_VCP_ONLY.USBD_MTP_DESC, ptr + 0x09, len - 0x09);
+  if (sUSBD_MTP_Enable) {
+    /* First, so its bulk IN gets endpoint 1 and the large TX FIFO that the
+       Mass Storage configuration gives that endpoint (see usbd_conf.c). */
+    ptr = USBD_MTP.GetFSConfigDescriptor(&len);
+    USBD_Update_MTP_DESC(ptr, interface_no_track, in_ep_track, out_ep_track,
+                         in_ep_track + 1, USBD_Track_String_Index);
+    memcpy(fsDesc + pos, ptr + 0x09, len - 0x09);
 
-  ptr = USBD_MTP.GetHSConfigDescriptor(&len);
-  USBD_Update_MTP_DESC(ptr, interface_no_track, in_ep_track, out_ep_track,
-                       in_ep_track + 1, USBD_Track_String_Index);
-  memcpy(USBD_COMPOSITE_HSCfgDesc_VCP_ONLY.USBD_MTP_DESC, ptr + 0x09, len - 0x09);
+    ptr = USBD_MTP.GetHSConfigDescriptor(&len);
+    USBD_Update_MTP_DESC(ptr, interface_no_track, in_ep_track, out_ep_track,
+                         in_ep_track + 1, USBD_Track_String_Index);
+    memcpy(hsDesc + pos, ptr + 0x09, len - 0x09);
+    pos += len - 0x09;
 
-  in_ep_track += 2;
-  out_ep_track += 1;
-  interface_no_track += 1;
-  USBD_Track_String_Index += 1;
+    in_ep_track += 2;
+    out_ep_track += 1;
+    interface_no_track += 1;
+    USBD_Track_String_Index += 1;
+  }
 #endif
 
 #if (USBD_USE_CDC_ACM == 1)
@@ -1372,7 +1400,7 @@ static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void)
                            in_ep_track + 1,
                            out_ep_track,
                            USBD_Track_String_Index);
-  memcpy(USBD_COMPOSITE_FSCfgDesc_VCP_ONLY.USBD_CDC_ACM_DESC, ptr + 0x09, len - 0x09);
+  memcpy(fsDesc + pos, ptr + 0x09, len - 0x09);
 
   ptr = USBD_CDC_ACM.GetHSConfigDescriptor(&len);
   USBD_Update_CDC_ACM_DESC(ptr,
@@ -1382,7 +1410,8 @@ static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void)
                            in_ep_track + 1,
                            out_ep_track,
                            USBD_Track_String_Index);
-  memcpy(USBD_COMPOSITE_HSCfgDesc_VCP_ONLY.USBD_CDC_ACM_DESC, ptr + 0x09, len - 0x09);
+  memcpy(hsDesc + pos, ptr + 0x09, len - 0x09);
+  pos += len - 0x09;
 
   in_ep_track += 2 * USBD_CDC_ACM_COUNT;
   out_ep_track += 1 * USBD_CDC_ACM_COUNT;
@@ -1390,7 +1419,8 @@ static void USBD_COMPOSITE_Mount_Class_VCP_ONLY(void)
   USBD_Track_String_Index += USBD_CDC_ACM_COUNT;
 #endif
 
-  uint16_t CFG_SIZE = sizeof(USBD_COMPOSITE_CFG_DESC_VCP_ONLY_t);
+  uint16_t CFG_SIZE = pos;
+  sUSBD_VCP_ONLY_Len = pos;
   ptr = USBD_COMPOSITE_HSCfgDesc_VCP_ONLY.CONFIG_DESC;
   /* Configuration Descriptor */
   ptr[0] = 0x09;                        /* bLength: Configuration Descriptor size */

@@ -43,9 +43,16 @@ void printStatus()
     CLIConsole_print("reopen:   %s\n", reopen ? "on" : "off");
 #if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
     const bool mtp = Settings::DebugManager::GetInstance().getSettings().usbCfg.mtp;
-    CLIConsole_print("mtp:      %s\n", mtp ? "on (plug-in serves MTP, drive stays closed)"
-                                           : "off (MTP only while the drive is closed)");
+    const MtpResponder &r = MtpResponder::GetInstance();
+    CLIConsole_print("mtp:      %s\n", !mtp ? "off" :
+                     (open ? "on (paused while the drive is open)" :
+                      (r.session() != 0 ? "on, in use" : "on")));
+#endif
+}
 
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+void printMtpCounters()
+{
     const MtpResponder &r = MtpResponder::GetInstance();
     const volatile MtpResponder::Stats &s = r.stats();
     CLIConsole_print("mtp now:  %s, session %lu, ep in 0x%02X out 0x%02X int 0x%02X itf %u\n",
@@ -71,8 +78,58 @@ void printStatus()
     CLIConsole_print("mtp poll: %lu polls, %lu events sent, %lu not sent\n",
                      (unsigned long)s.polls, (unsigned long)s.events,
                      (unsigned long)s.eventFails);
-#endif
 }
+
+void setMtp(bool on)
+{
+    // As for `usb reopen`: the settings file is the host's while the drive
+    // is open.
+    Backend &backend = Backend::GetInstance();
+    if (backend.isMsdOpen()) {
+        CLIConsole_print("the drive is open: run 'usb drive off' first\n");
+        return;
+    }
+
+    if (Settings::DebugManager::GetInstance().getSettings().usbCfg.mtp == on &&
+            UsbDevice::GetInstance().isMtpEnabled() == on) {
+        CLIConsole_print(on ? "mtp already on\n" : "mtp already off\n");
+        return;
+    }
+
+    using Result = Backend::ReopenResult;
+    if (backend.mtpResult() == Result::Pending) {
+        CLIConsole_print("the last 'usb mtp' is still pending; try again\n");
+        return;
+    }
+    if (!backend.setMtp(on)) {
+        CLIConsole_print("failed to post event\n");
+        return;
+    }
+
+    Result result = backend.mtpResult();
+    for (int waited = 0; result == Result::Pending && waited < 3000; waited += 10) {
+        WAIT(10);
+        result = backend.mtpResult();
+    }
+
+    switch (result) {
+    case Result::Saved:
+        // The Backend re-enumerates the device just after saying so.
+        CLIConsole_print(on ? "mtp: on; this port reconnects\n"
+                            : "mtp: off; this port reconnects\n");
+        break;
+    case Result::DriveOpen:
+        CLIConsole_print("not saved: the drive opened; run 'usb drive off' first\n");
+        break;
+    case Result::SaveFailed:
+        CLIConsole_print("not saved: writing the settings failed\n");
+        break;
+    case Result::Pending:
+        CLIConsole_print("still pending; run 'usb' to check\n");
+        break;
+    }
+}
+#endif
 
 void driveOn()
 {
@@ -247,6 +304,12 @@ const char* Components::CliUtils::UtilUsb::getHelp(ICLICommand_t* cmd)
             "close the drive - " CLI_ATTR_CMD_HELP "usb drive off" CLI_ATTR_DEF "\n"
             "open it again after 'reset' with the cable in (default off, saved)\n"
             "                - " CLI_ATTR_CMD_HELP "usb reopen on|off" CLI_ATTR_DEF "\n"
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+            "share the files over MTP while the drive is closed (default off,\n"
+            "saved; plugging in then leaves the drive closed)\n"
+            "                - " CLI_ATTR_CMD_HELP "usb mtp on|off" CLI_ATTR_DEF "\n"
+            "MTP counters    - " CLI_ATTR_CMD_HELP "usb mtp" CLI_ATTR_DEF "\n"
+#endif
         "\n"
         "Plugging the cable in, or turning the watch on with it in, opens\n"
         "the drive.\n"
@@ -258,7 +321,15 @@ const char* Components::CliUtils::UtilUsb::getHelp(ICLICommand_t* cmd)
         "\n"
         "App loop with the cable in: 'usb drive on', copy the app, flush the\n"
         "drive, 'reset'.\n"
-        "With reopen off the watch comes back usable, with the new app.\n");
+        "With reopen off the watch comes back usable, with the new app.\n"
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+        "\n"
+        "With MTP on the watch shows on the computer as a device (Explorer:\n"
+        "This PC), like a phone: files can be copied both ways while the\n"
+        "watch keeps running and writing. The drive is still there for tools\n"
+        "that need a drive letter: 'usb drive on', then 'usb drive off'.\n"
+#endif
+        );
 
     return "";
 }
@@ -291,7 +362,16 @@ void Components::CliUtils::UtilUsb::execute(ICLICommand_t* cmd,
         }
     } else if (argc == 3 && strcmp(argv[1], "reopen") == 0 && parseOnOff(argv[2], on)) {
         setReopen(on);
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    } else if (argc == 2 && strcmp(argv[1], "mtp") == 0) {
+        printMtpCounters();
+    } else if (argc == 3 && strcmp(argv[1], "mtp") == 0 && parseOnOff(argv[2], on)) {
+        setMtp(on);
+    } else {
+        CLIConsole_print("usage: usb | usb drive on|off | usb reopen on|off | usb mtp [on|off]\n");
+#else
     } else {
         CLIConsole_print("usage: usb | usb drive on|off | usb reopen on|off\n");
+#endif
     }
 }

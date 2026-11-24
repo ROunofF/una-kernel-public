@@ -138,6 +138,13 @@ void Backend::thread()
         mMsdHeld = true;
     }
 
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    // main() started USB without MTP, before the settings were read. If the
+    // device is already up with the drive closed, it re-enumerates with MTP.
+    UsbDevice::GetInstance().setMtpEnabled(
+            Settings::DebugManager::GetInstance().getSettings().usbCfg.mtp);
+#endif
+
     UsbDevice::GetInstance().attachCallback(this);
 
     // main() starts USB before this thread runs. With the cable already in
@@ -2111,6 +2118,50 @@ bool Backend::setReopenAfterReset(bool on)
         return false;
     }
     return true;
+}
+
+bool Backend::setMtp(bool on)
+{
+    ReopenResult last = mMtpResult;
+    if (last == ReopenResult::Pending ||
+            !mMtpResult.compare_exchange_strong(last, ReopenResult::Pending)) {
+        return false;
+    }
+    if (!sendEventToBackend(G2BEvent::UsbMtpSet{on})) {
+        mMtpResult = ReopenResult::SaveFailed;
+        return false;
+    }
+    return true;
+}
+
+void Backend::guiHandler(const G2BEvent::UsbMtpSet &evt)
+{
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    // As for UsbReopenSet: the settings file is the host's while the drive
+    // is open.
+    if (mMsdOpen) {
+        LOG_WARNING("usbCfg.mtp not saved: the drive is open\n");
+        mMtpResult = ReopenResult::DriveOpen;
+        return;
+    }
+    const bool on = evt.on;
+    if (!Settings::DebugManager::GetInstance().updateSettings(
+            [on](WatchSettingsDebug &settings) {
+                settings.usbCfg.mtp = on;
+            })) {
+        LOG_ERROR("usbCfg.mtp not saved\n");
+        mMtpResult = ReopenResult::SaveFailed;
+        return;
+    }
+    // Reported before the device re-enumerates, which takes the serial
+    // port that asked with it.
+    mMtpResult = ReopenResult::Saved;
+    OS::Delay(300);
+    UsbDevice::GetInstance().setMtpEnabled(on);
+#else
+    (void)evt;
+    mMtpResult = ReopenResult::SaveFailed;
+#endif
 }
 
 void Backend::guiHandler(const G2BEvent::MsdCloseByHand &evt)

@@ -32,6 +32,7 @@
 #endif
 
 extern bool USBD_COMPOSITE_IsMSCEnabled(void);
+extern bool USBD_COMPOSITE_IsMTPActive(void);
 
 // IN endpoints 1..8 on the OTG core (index 0 unused here)
 #define USBD_TX_FIFO_COUNT  9U
@@ -273,7 +274,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
     }
 #endif
 #if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
-    if (!mscOn) {
+    if (USBD_COMPOSITE_IsMTPActive()) {
         txFifo[MTP_IN_EP & 0x7F]  = isHS ? 1024 : 128;
         txFifo[MTP_INT_EP & 0x7F] = 64;
     }

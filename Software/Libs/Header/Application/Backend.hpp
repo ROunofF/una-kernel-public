@@ -138,6 +138,17 @@ public:
     };
     ReopenResult reopenResult() const { return mReopenResult; }
 
+    /**
+     * @brief   Save usbCfg.mtp and apply it: with the drive closed, the device
+     *          re-enumerates with or without MTP. For `usb mtp on|off`. Same
+     *          rules as setReopenAfterReset(); mtpResult() says how it went.
+     * @retval  true if the request was queued.
+     */
+    bool setMtp(bool on);
+
+    /// Outcome of the last setMtp(), with the same meanings.
+    ReopenResult mtpResult() const { return mMtpResult; }
+
 private:
     Backend();
 
@@ -403,6 +414,9 @@ private:
     /// Set by the UsbReopenSet handler, read by the CLI thread.
     std::atomic<ReopenResult> mReopenResult {ReopenResult::Saved};
 
+    /// Set by the UsbMtpSet handler, read by the CLI thread.
+    std::atomic<ReopenResult> mMtpResult {ReopenResult::Saved};
+
     /// Reload the settings the host may have edited over the drive. Only once
     /// the host can no longer reach the volume.
     void reloadSettingsAfterMsd();
@@ -411,6 +425,7 @@ private:
     void guiHandler(const G2BEvent::MsdClose &evt);
     void guiHandler(const G2BEvent::MsdCloseByHand &evt);
     void guiHandler(const G2BEvent::UsbReopenSet &evt);
+    void guiHandler(const G2BEvent::UsbMtpSet &evt);
     void guiHandler(const G2BEvent::ScreenFrameRate &evt);
     void guiHandler(const G2BEvent::HomeScreenShown &evt);
     // Internal: carries a watch face stopping from the thread it was running

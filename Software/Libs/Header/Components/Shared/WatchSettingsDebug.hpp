@@ -80,7 +80,7 @@ struct WatchSettingsDebug {
     // USB
     struct {
         bool     reopenAfterReset = false; // Open the USB drive again after a software reset with the cable in (a plug-in or a power-on always opens it)
-        bool     mtp = false;              // On plug-in, keep the USB drive closed and serve the files over MTP instead, so the watch keeps running (`usb drive on` still opens the drive)
+        bool     mtp = false;              // `usb mtp on|off`: offer MTP whenever the USB drive is closed, and keep the drive closed on plug-in so the watch keeps running (`usb drive on` still opens it). Off: as before MTP, the serial port alone
     } usbCfg;
 
     /**

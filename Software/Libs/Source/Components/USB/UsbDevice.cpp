@@ -30,6 +30,7 @@
 #include "usbd_msc.h"
 #include "usbd_msc_if.h"
 extern "C" void USBD_COMPOSITE_EnableMSC(bool enable);
+extern "C" void USBD_COMPOSITE_EnableMTP(bool enable);
 #endif // (USB_MSC_ENABLE == 1)
 
 extern "C" void USBD_COMPOSITE_SetConfiguredCallback(void (*cb)(void));
@@ -281,6 +282,37 @@ bool UsbDevice::reinit(bool mscEnable, uint8_t mscDisk)
     return mIsInit;
 }
 
+bool UsbDevice::setMtpEnabled(bool on)
+{
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    if (!lock()) {
+        return false;
+    }
+    if (mIsMtpEnabled == on) {
+        unlock();
+        return true;
+    }
+    // Let an operation in progress finish before the interface goes; the
+    // reinit below resumes the responder, ready for the next time.
+    if (!on && !MtpResponder::GetInstance().suspend(2000)) {
+        LOG_WARNING("MTP still busy; removing it anyway\n");
+    }
+    mIsMtpEnabled = on;
+    bool ok = true;
+    if (mIsInit && !mIsMscEnabled) {
+        // Recursive mutex: reinit() takes it again.
+        ok = reinit(false, mMscDisk);
+    } else if (!on) {
+        MtpResponder::GetInstance().resume();
+    }
+    unlock();
+    return ok;
+#else
+    (void)on;
+    return false;
+#endif
+}
+
 bool UsbDevice::enable()
 {
     if (!mIsInit) {
@@ -358,6 +390,9 @@ bool UsbDevice::initDevice()
     io.getBlockNum  = MSC_BlockNum;
     USBD_STORAGE_config(mMscDisk, io);
     USBD_COMPOSITE_EnableMSC(mIsMscEnabled);
+#endif
+#if defined(USB_MTP_ENABLE) && (USB_MTP_ENABLE == 1)
+    USBD_COMPOSITE_EnableMTP(mIsMtpEnabled);
 #endif
 
     USBD_COMPOSITE_Mount_Class();

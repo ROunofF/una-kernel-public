@@ -210,6 +210,11 @@ struct MsdCloseByHand {};
 struct UsbReopenSet {
     bool on;
 };
+/// `usb mtp on|off` (USB CLI): save usbCfg.mtp and offer MTP, or stop, at
+/// once. On the Backend thread, for the same reason as UsbReopenSet.
+struct UsbMtpSet {
+    bool on;
+};
 
 /**
  * @brief How often the screen now up needs a frame for its own sake.
@@ -337,6 +342,7 @@ using Data = std::variant<
         MsdClose,
         MsdCloseByHand,
         UsbReopenSet,
+        UsbMtpSet,
         ScreenFrameRate,
         HomeScreenShown,
         PlayError,

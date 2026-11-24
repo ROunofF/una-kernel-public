@@ -160,6 +160,24 @@ public:
     }
 
     /**
+     * @brief   Offer MTP alongside the serial port while Mass Storage is
+     *          off (`usb mtp on|off`). If the device is up in that
+     *          configuration it re-enumerates, so the serial port
+     *          reconnects; otherwise it takes effect at the next reinit.
+     * @param   on: true to offer MTP.
+     * @retval  false if the change could not be applied.
+     */
+    bool setMtpEnabled(bool on);
+
+    /**
+     * @brief   Whether MTP is offered while Mass Storage is off.
+     */
+    bool isMtpEnabled() const
+    {
+        return mIsMtpEnabled;
+    }
+
+    /**
      * @brief   Get last detected port type from BCD.
      * @retval  DriverUsb_PortType_t value.
      */
@@ -231,6 +249,7 @@ private:
     bool                 mIsInit       = false;
     bool                 mIsOn         = false;
     bool                 mIsMscEnabled = false;
+    bool                 mIsMtpEnabled = false;
     uint8_t              mMscDisk      = 0;
     DriverUsb_PortType_t mPortType     = DRIVER_USB_PORT_NONE;
 
